@@ -1,4 +1,5 @@
 """Response body for getting the data related to quest posts."""
+from abc import ABC
 from typing import Any
 
 from controllers import QuestPostKey
@@ -8,30 +9,44 @@ from .basic import Response, ResponseKey
 
 __all__ = ("QuestPostPublishSuccessResponse", "QuestPostPublishFailedResponse", "QuestPostPublishSuccessResponseKey",
            "QuestPostListResponse", "QuestPostListResponseKey",
-           "QuestPostGetSuccessResponse", "QuestPostGetFailedResponse", "QuestPostGetSuccessResponseKey")
+           "QuestPostGetSuccessResponse", "QuestPostGetFailedResponse", "QuestPostGetSuccessResponseKey",
+           "QuestPostEditSuccessResponse", "QuestPostEditFailedResponse", "QuestPostEditSuccessResponseKey")
 
 
-class QuestPostPublishSuccessResponseKey(ResponseKey):
+class QuestPostUpdateSuccessResponseKey(ResponseKey, ABC):
+    """Response keys of successfully published/edited a post."""
     IS_ADMIN = "isAdmin"
 
     POST_SEQ_ID = "seqId"
 
 
-class QuestPostPublishSuccessResponse(Response):
-    """Response body of successfully published a post."""
+class QuestPostUpdateSuccessResponse(Response, ABC):
+    """Response body of successfully published/edited a post."""
 
-    def __init__(self, new_seq_id: int):
+    def __init__(self, seq_id: int):
         super().__init__(ResponseCodeCollection.SUCCESS)
 
-        self._new_seq_id = new_seq_id
+        self._seq_id = seq_id
 
     def serialize(self):
         return super().serialize() | {
-            QuestPostPublishSuccessResponseKey.POST_SEQ_ID: self._new_seq_id
+            QuestPostPublishSuccessResponseKey.POST_SEQ_ID: self._seq_id
         }
 
 
-class QuestPostPublishFailedResponse(Response):
+class QuestPostUpdateFailedResponse(Response, ABC):
+    """Response body of failed to publish/edit a post."""
+
+
+class QuestPostPublishSuccessResponseKey(QuestPostUpdateSuccessResponseKey):
+    """Response keys of successfully published a post."""
+
+
+class QuestPostPublishSuccessResponse(QuestPostUpdateSuccessResponse):
+    """Response body of successfully published a post."""
+
+
+class QuestPostPublishFailedResponse(QuestPostUpdateFailedResponse):
     """Response body of failed to publish a post."""
 
 
@@ -49,6 +64,7 @@ class QuestPostListResponseKey(ResponseKey):
     # These keys need to be consistent with the definition structure at the front side
     # Type name: `PostLintEntry`
     POSTS_SEQ_ID = "seqId"
+    POSTS_LANG = "lang"
     POSTS_TITLE = "title"
     POSTS_VIEW_COUNT = "viewCount"
     POSTS_LAST_MODIFIED = "modified"
@@ -61,6 +77,7 @@ class QuestPostListResponseKey(ResponseKey):
         for post in posts:
             ret.append({
                 cls.POSTS_SEQ_ID: post[QuestPostKey.SEQ_ID],
+                cls.POSTS_LANG: post[QuestPostKey.LANG_CODE],
                 cls.POSTS_TITLE: post[QuestPostKey.TITLE],
                 cls.POSTS_VIEW_COUNT: post[QuestPostKey.VIEW_COUNT],
                 cls.POSTS_LAST_MODIFIED: post[QuestPostKey.DT_LAST_MODIFIED],
@@ -186,3 +203,15 @@ class QuestPostGetSuccessResponse(Response):
 
 class QuestPostGetFailedResponse(Response):
     """Response body of failing to get a post."""
+
+
+class QuestPostEditSuccessResponseKey(QuestPostUpdateSuccessResponseKey):
+    """Response keys of successfully edited a post."""
+
+
+class QuestPostEditSuccessResponse(QuestPostUpdateSuccessResponse):
+    """Response body of successfully edited a post."""
+
+
+class QuestPostEditFailedResponse(QuestPostUpdateFailedResponse):
+    """Response body of failed to edit a post."""

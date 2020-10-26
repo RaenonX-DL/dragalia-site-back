@@ -20,6 +20,8 @@ class ResponseCodeCollection:
         ResponseCode(100, True, "Request succeed.")
     SUCCESS_NEW = \
         ResponseCode(101, True, "Request succeed with some data newly registered.")
+    SUCCESS_NO_CHANGE = \
+        ResponseCode(102, True, "Request succeed with nothing changed.")
 
     FAILED_LOGIN_NOT_RECORDED = \
         ResponseCode(200, False, "Failed to record the login of a user.")

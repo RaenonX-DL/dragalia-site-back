@@ -1,7 +1,7 @@
 """Functions for API preparation."""
 from flask_restful import Api
 
-from endpoints import EPUserLogin, EPQuestPostList, EPQuestPostGet, EPQuestPostPublish
+from endpoints import EPUserLogin, EPQuestPostList, EPQuestPostGet, EPQuestPostPublish, EPQuestPostEdit
 
 __all__ = ("attach_endpoints",)
 
@@ -12,3 +12,4 @@ def attach_endpoints(app):
     api.add_resource(EPQuestPostList, "/posts/quest", endpoint="posts.quest.list")
     api.add_resource(EPQuestPostGet, "/posts/quest/get", endpoint="posts.quest.get")
     api.add_resource(EPQuestPostPublish, "/posts/quest/publish", endpoint="posts.quest.publish")
+    api.add_resource(EPQuestPostEdit, "/posts/quest/edit", endpoint="posts.quest.edit")

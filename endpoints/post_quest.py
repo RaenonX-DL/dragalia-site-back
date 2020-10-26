@@ -3,19 +3,24 @@ from webargs import fields
 from webargs.flaskparser import use_args
 
 from controllers import GoogleUserDataController, QuestPostController, QuestPostKey
+from controllers.results import UpdateResult
 from responses import (
     ResponseCodeCollection,
     QuestPostListResponse,
     QuestPostPublishSuccessResponse, QuestPostPublishFailedResponse,
-    QuestPostGetSuccessResponse, QuestPostGetFailedResponse
+    QuestPostGetSuccessResponse, QuestPostGetFailedResponse,
+    QuestPostEditSuccessResponse, QuestPostEditFailedResponse
 )
 
 from .base import EndpointBase, EPParamBase
 
 __all__ = ("EPQuestPostPublish", "EPQuestPostPublishParam",
            "EPQuestPostList", "EPQuestPostListParam",
-           "EPQuestPostGet", "EPQuestPostGetParam")
+           "EPQuestPostGet", "EPQuestPostGetParam",
+           "EPQuestPostEdit")
 
+
+# region Quest Post / Publish
 
 class EPQuestPostPublishParam(EPParamBase):
     """Parameters for the request of publishing a quest post."""
@@ -85,6 +90,10 @@ class EPQuestPostPublish(EndpointBase):
 
         return QuestPostPublishSuccessResponse(new_seq_id), 200
 
+# endregion
+
+
+# region Quest Post / List
 
 class EPQuestPostListParam(EPParamBase):
     """Parameters for the request of a list of quest posts."""
@@ -111,17 +120,23 @@ class EPQuestPostList(EndpointBase):
 
         return QuestPostListResponse(is_user_admin, posts, start_idx), 200
 
+# endregion
+
+
+# region Quest Post / Get
 
 class EPQuestPostGetParam(EPParamBase):
     """Parameters for the request of getting a quest post."""
 
     SEQ_ID = "seq_id"
     LANG_CODE = "lang_code"
+    INCREASE_COUNT = "inc_count"
 
 
 quest_post_get_args = EndpointBase.base_args() | {
     EPQuestPostGetParam.SEQ_ID: fields.Int(default=0),
-    EPQuestPostGetParam.LANG_CODE: fields.Str()
+    EPQuestPostGetParam.LANG_CODE: fields.Str(),
+    EPQuestPostGetParam.INCREASE_COUNT: fields.Bool()
 }
 
 
@@ -133,9 +148,67 @@ class EPQuestPostGet(EndpointBase):
         seq_id = args[EPQuestPostGetParam.SEQ_ID]
 
         is_user_admin = GoogleUserDataController.is_user_admin(args[EPQuestPostGetParam.GOOGLE_UID])
-        post = QuestPostController.get_post(seq_id, args[EPQuestPostGetParam.LANG_CODE])
+        post = QuestPostController.get_post(seq_id,
+                                            args[EPQuestPostGetParam.LANG_CODE],
+                                            args[EPQuestPostGetParam.INCREASE_COUNT])
 
         if not post:
             return QuestPostGetFailedResponse(ResponseCodeCollection.FAILED_POST_NOT_EXISTS), 200
 
         return QuestPostGetSuccessResponse(is_user_admin, post), 200
+
+# endregion
+
+
+# region Quest Post / Edit
+
+class EPQuestPostEditParam(EPQuestPostPublishParam):
+    """Parameters for the request of editting a quest post."""
+
+    SEQ_ID = "seq_id"
+    MODIFY_NOTE = "modify_note"
+
+
+quest_post_edit_args = EndpointBase.base_args() | {
+    EPQuestPostEditParam.SEQ_ID: fields.Int(default=0),
+    EPQuestPostEditParam.TITLE: fields.Str(),
+    EPQuestPostEditParam.LANG_CODE: fields.Str(),
+    EPQuestPostEditParam.GENERAL_INFO: fields.Str(),
+    EPQuestPostEditParam.VIDEO: fields.Str(),
+    EPQuestPostEditParam.POSITION_INFO: fields.List(fields.Dict(keys=fields.Str(), values=fields.Str())),
+    EPQuestPostEditParam.ADDENDUM: fields.Str(),
+    EPQuestPostEditParam.MODIFY_NOTE: fields.Str(),
+}
+
+
+class EPQuestPostEdit(EndpointBase):
+    """Endpoint resource to get a post."""
+
+    @use_args(quest_post_edit_args)
+    def post(self, args):
+        is_user_admin = GoogleUserDataController.is_user_admin(args[EPQuestPostEditParam.GOOGLE_UID])
+        if not is_user_admin:
+            return QuestPostPublishFailedResponse(ResponseCodeCollection.FAILED_QUEST_NOT_PUBLISHED_NOT_ADMIN), 401
+
+        seq_id = args[EPQuestPostEditParam.SEQ_ID]
+        title = args[EPQuestPostEditParam.TITLE]
+        lang_code = args[EPQuestPostEditParam.LANG_CODE]
+        general_info = args[EPQuestPostEditParam.GENERAL_INFO]
+        video = args[EPQuestPostEditParam.VIDEO]
+        positional_info = EPQuestPostEditParam.pos_info_to_model_key(args[EPQuestPostEditParam.POSITION_INFO])
+        addendum = args[EPQuestPostEditParam.ADDENDUM]
+        modify_note = args[EPQuestPostEditParam.MODIFY_NOTE]
+
+        edit_outcome = QuestPostController.edit_post(
+            seq_id, title, lang_code, general_info, video, positional_info, addendum, modify_note
+        )
+
+        if edit_outcome == UpdateResult.NOT_FOUND:
+            return QuestPostEditFailedResponse(ResponseCodeCollection.FAILED_POST_NOT_EXISTS), 404
+
+        if edit_outcome == UpdateResult.NO_CHANGE:
+            return QuestPostEditSuccessResponse(seq_id), 200
+
+        return QuestPostEditSuccessResponse(seq_id), 200
+
+# endregion

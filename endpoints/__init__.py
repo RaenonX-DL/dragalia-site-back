@@ -2,6 +2,7 @@
 from .post_quest import (
     EPQuestPostList, EPQuestPostListParam,
     EPQuestPostPublish, EPQuestPostPublishParam,
-    EPQuestPostGet, EPQuestPostGetParam
+    EPQuestPostGet, EPQuestPostGetParam,
+    EPQuestPostEdit
 )
 from .user import EPUserLogin, EPUserLoginParam

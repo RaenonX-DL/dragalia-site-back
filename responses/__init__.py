@@ -4,7 +4,8 @@ from .body import (
     UserLoginResponse,
     QuestPostListResponse, QuestPostListResponseKey,
     QuestPostPublishSuccessResponse, QuestPostPublishFailedResponse,
-    QuestPostGetSuccessResponse, QuestPostGetFailedResponse
+    QuestPostGetSuccessResponse, QuestPostGetFailedResponse,
+    QuestPostEditSuccessResponse, QuestPostEditFailedResponse
 )
 from .code import ResponseCode, ResponseCodeCollection
 from .serializer import ResponseBodyEncoder
