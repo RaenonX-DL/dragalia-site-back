@@ -1,0 +1,10 @@
+# All app requirements
+-r requirements.txt
+
+# Testing
+pytest
+
+# Linting
+pylint
+pydocstyle
+flake8

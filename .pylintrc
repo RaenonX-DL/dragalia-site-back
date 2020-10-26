@@ -1,0 +1,25 @@
+# Template .pylintrc file https://raw.githubusercontent.com/datawire/quark/master/.pylintrc
+
+[BASIC]
+
+# Reason of the good names:
+# - _
+#   often used as dummy variable during unpacking
+
+good-names=_
+
+include-naming-hint=yes
+
+[DESIGN]
+
+min-public-methods=0
+
+max-parents=15
+
+max-args=5
+
+max-returns=7
+
+[FORMAT]
+
+max-line-length=119

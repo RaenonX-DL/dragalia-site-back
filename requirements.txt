@@ -1,0 +1,11 @@
+# Web framework
+flask
+flask-CORS
+flask-restful
+
+# Arg parsing
+webargs
+
+# Database
+pymongo
+dnspython
