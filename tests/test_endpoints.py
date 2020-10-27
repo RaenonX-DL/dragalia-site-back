@@ -4,6 +4,17 @@ from endpoints import EPUserLoginParam, EPQuestPostListParam, EPQuestPostGetPara
 from responses import ResponseCodeCollection, QuestPostListResponseKey
 
 
+def test_root(client):
+    r = client.get(url_for("misc.root"))
+
+    assert r.status_code == 200
+
+    response = r.json
+
+    assert response[QuestPostListResponseKey.CODE] == ResponseCodeCollection.SUCCESS.code
+    assert response[QuestPostListResponseKey.SUCCESS]
+
+
 def test_user_login(client):
     r = client.post(
         url_for("user.login"),
@@ -17,7 +28,8 @@ def test_user_login(client):
 
     response = r.json
 
-    assert response[QuestPostListResponseKey.CODE] in (100, 101)
+    assert response[QuestPostListResponseKey.CODE] \
+           in (ResponseCodeCollection.SUCCESS.code, ResponseCodeCollection.SUCCESS_NEW.code)
     assert response[QuestPostListResponseKey.SUCCESS]
 
 

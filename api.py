@@ -2,7 +2,8 @@
 from flask_restful import Api
 
 from endpoints import (
-    EPUserLogin, EPQuestPostList, EPQuestPostGet, EPQuestPostPublish, EPQuestPostEdit, EPQuestPostIDCheck
+    EPRootTest, EPUserLogin,
+    EPQuestPostList, EPQuestPostGet, EPQuestPostPublish, EPQuestPostEdit, EPQuestPostIDCheck
 )
 from responses import Error500Response
 
@@ -26,6 +27,7 @@ def attach_api(app):
 
 def attach_endpoints(api_app):
     """Attach API endpoints to Flask app."""
+    api_app.add_resource(EPRootTest, "/", endpoint="misc.root")
     api_app.add_resource(EPUserLogin, "/user/login", endpoint="user.login")
     api_app.add_resource(EPQuestPostList, "/posts/quest", endpoint="posts.quest.list")
     api_app.add_resource(EPQuestPostGet, "/posts/quest/get", endpoint="posts.quest.get")

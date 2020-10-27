@@ -8,4 +8,5 @@ from .post_quest import (
     QuestPostEditSuccessResponse, QuestPostEditFailedResponse,
     QuestPostIDCheckResponse
 )
+from .root import RootTestResponse
 from .user import UserLoginResponse
