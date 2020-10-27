@@ -29,6 +29,10 @@ class ResponseCodeCollection:
         ResponseCode(201, False, "Failed to publish the quest post. User is not a site admin.")
     FAILED_POST_NOT_EXISTS = \
         ResponseCode(202, False, "Post not exists.")
+    FAILED_CHECK_NOT_ADMIN = \
+        ResponseCode(203, False, "Check failed because the user is not an admin.")
 
+    FAILED_SERVER_ERROR = \
+        ResponseCode(901, False, "Request failed with server side error.")
     FAILED_UNKNOWN = \
         ResponseCode(999, False, "Request failed with unknown reason.")

@@ -1,2 +1,2 @@
 """Controllers for the post data."""
-from .quest import QuestPostController, QuestPostKey
+from .quest import QuestPostGetOneResult, QuestPostController, QuestPostKey

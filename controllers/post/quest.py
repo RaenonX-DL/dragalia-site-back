@@ -1,4 +1,5 @@
 """Quest Post data controllers."""
+from dataclasses import dataclass
 from datetime import datetime
 from typing import Any, Optional
 
@@ -7,9 +8,16 @@ import pymongo
 from controllers.base import BaseCollection
 from controllers.results import UpdateResult
 
-__all__ = ("QuestPostKey", "QuestPostController")
+__all__ = ("QuestPostGetOneResult", "QuestPostKey", "QuestPostController")
 
 DB_NAME = "post"
+
+
+@dataclass
+class QuestPostGetOneResult:
+    post: dict[str, Any]
+    is_alt_lang: bool
+    other_langs: list[str]
 
 
 class QuestPostKey:
@@ -62,6 +70,8 @@ class _QuestPostController(BaseCollection):
     def __init__(self):
         super().__init__(True)
 
+        self._post_cache: dict[tuple[int, str], Any] = {}
+
     def build_indexes(self):
         self.create_index(
             [
@@ -71,37 +81,69 @@ class _QuestPostController(BaseCollection):
             unique=True
         )
 
-    def get_post(self, seq_id: int, lang_code: str = "cht", inc_count: bool = True) -> Optional[dict[str, Any]]:
+    def is_id_lang_available(self, seq_id: Optional[int], lang_code: str) -> bool:
         """
-        Get a post by its ``seq_id`` in ``lang_code``, if provided.
+        Check if the given ID and language code is available.
 
-        If the above condition returns nothing, but there's a post with the same ``seq_id``, return it.
+        :param seq_id: sequential ID to be checked
+        :param lang_code: language code to be checked
+        :return: if the combination is available
+        """
+        if not seq_id:
+            return True
 
-        Otherwise, return ``None``.
+        if seq_id > self.get_next_seq_id(increase=False):
+            return False
+
+        return self.find_one({QuestPostKey.SEQ_ID: seq_id, QuestPostKey.LANG_CODE: lang_code}) is None
+
+    def get_post(self, seq_id: int, lang_code: str = "cht", inc_count: bool = True) -> QuestPostGetOneResult:
+        """
+        Get a post by its ``seq_id`` and ``lang_code`` with available languages and if it's in an alt language.
 
         Increases the post view count if ``inc_count`` is ``True``.
+
+        Will not check for the other available languages if the count will not be increased,
+        because such condition only happens when fetching the post for edit.0
         """
-        ret = self.find_one_and_update(
+        other_langs = []
+        if inc_count:
+            other_langs = [
+                data[QuestPostKey.LANG_CODE]
+                for data in self.find(
+                    {QuestPostKey.SEQ_ID: seq_id, QuestPostKey.LANG_CODE: {"$ne": lang_code}},
+                    projection={QuestPostKey.LANG_CODE: 1}
+                )
+            ]
+
+        post = self.find_one_and_update(
             {QuestPostKey.SEQ_ID: seq_id, QuestPostKey.LANG_CODE: lang_code},
             {"$inc": {QuestPostKey.VIEW_COUNT: 1 if inc_count else 0}}
         )
-        if ret:
-            return ret
+        in_alt_lang = False
 
-        return self.find_one_and_update({QuestPostKey.SEQ_ID: seq_id}, {"$inc": {QuestPostKey.VIEW_COUNT: 1}})
+        if not post:
+            post = self.find_one_and_update({QuestPostKey.SEQ_ID: seq_id}, {"$inc": {QuestPostKey.VIEW_COUNT: 1}})
+            in_alt_lang = True
 
-    def get_posts(self, /, start: int = 0, limit: int = 0) -> list[dict[str, Any]]:
+        if post:
+            # Using language code from key instead of post is because that we may get a post in alt lang
+            self._post_cache[(seq_id, post[QuestPostKey.LANG_CODE])] = post
+
+        return QuestPostGetOneResult(post, in_alt_lang, other_langs)
+
+    def get_posts(self, lang_code: str, /, start: int = 0, limit: int = 0) -> tuple[list[dict[str, Any]], int]:
         """
-        Get the posts sorted by the last modified date DESC.
+        Get the posts sorted by the last modified date DESC and the total post count.
 
         This method only returns key information of posts like sequential id (``s``), title (``t``), last modified
         timestamp (``d_m``) and published timestamp (``d_p``).
 
+        :param lang_code: language code
         :param start: starting index of the result
         :param limit: maximum count of the results to be returned
         :return: list of post records
         """
-        # TODO: Filter by language code
         projection = {
             QuestPostKey.SEQ_ID: 1,
             QuestPostKey.LANG_CODE: 1,
@@ -111,21 +153,28 @@ class _QuestPostController(BaseCollection):
             QuestPostKey.VIEW_COUNT: 1
         }
 
-        return sorted(
-            self.find(projection=projection, sort=[(QuestPostKey.DT_LAST_MODIFIED, pymongo.ASCENDING)])
-                .skip(start)
-                .limit(limit),
-            key=lambda item: item[QuestPostKey.DT_LAST_MODIFIED],
-            reverse=True
+        return (
+            sorted(
+                self.find({QuestPostKey.LANG_CODE: lang_code},
+                          projection=projection,
+                          sort=[(QuestPostKey.DT_LAST_MODIFIED, pymongo.ASCENDING)])
+                    .skip(start)
+                    .limit(limit),
+                key=lambda item: item[QuestPostKey.DT_LAST_MODIFIED],
+                reverse=True
+            ),
+            self.count_documents({QuestPostKey.LANG_CODE: lang_code})
         )
 
     def publish_post(self, title: str, lang_code: str, general_info: str, video: str,
-                     position_info: list[dict[str, str]], addendum: str) -> int:
+                     position_info: list[dict[str, str]], addendum: str, /, seq_id: Optional[int] = None) -> int:
         """
         Publish a quest post and get its sequential ID.
 
         Data in ``position_info`` should be insertion-ready (i.e. the key of each data is already using the key
         from the data model).
+
+        If ``seq_id`` is not specified, a new sequential ID will be used. Otherwise, use the given one.
 
         :param title: title of the post
         :param lang_code: language code of the post
@@ -133,10 +182,11 @@ class _QuestPostController(BaseCollection):
         :param video: video of the post
         :param position_info: positional info for each positions in the post
         :param addendum: addendum of the post
+        :param seq_id: sequential ID of the post
         :return: sequential ID for the newly published post
         :raises ValueError: positional info (`position_info`) is incomplete or not using the model key
         """
-        new_seq_id = self.get_next_seq_id()
+        new_seq_id = seq_id or self.get_next_seq_id()
         now = datetime.utcnow()
 
         if any(not QuestPostKey.is_positional_info_completed(info) for info in position_info):
@@ -206,6 +256,8 @@ class _QuestPostController(BaseCollection):
 
         if update_result.matched_count == 0:
             return UpdateResult.NOT_FOUND
+
+        del self._post_cache[(seq_id, lang_code)]
 
         # `NO_CHANGE` is impossible for now since each time a modification note will be pushed
         return UpdateResult.UPDATED if update_result.modified_count > 0 else UpdateResult.NO_CHANGE

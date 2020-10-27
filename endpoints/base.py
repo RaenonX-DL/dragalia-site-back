@@ -16,4 +16,4 @@ class EndpointBase(Resource):  # Cannot use `ABC` because of meta class conflict
 
     @staticmethod
     def base_args():
-        return {EPParamBase.GOOGLE_UID: fields.Str()}
+        return {EPParamBase.GOOGLE_UID: fields.Str(missing=None)}

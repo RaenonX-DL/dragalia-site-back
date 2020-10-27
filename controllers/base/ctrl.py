@@ -21,12 +21,13 @@ class BaseCollection(CollectionPropertiesMixin, Collection, ABC):
         if sequential:
             self._seq = self.count_documents({})
 
-    def get_next_seq_id(self) -> int:
-        """Increase the sequence counter by 1 and get that sequential number ready to be used."""
+    def get_next_seq_id(self, /, increase: bool = True) -> int:
+        """Get the next sequential number. If ``increase`` is ``1``, increase the sequential ID."""
         if self._seq is None:
             raise ValueError("This collection is not sequential.")
 
-        self._seq += 1
+        if increase:
+            self._seq += 1
 
         return self._seq
 

@@ -78,7 +78,8 @@ class _GoogleUserDataController(BaseCollection):
         if not uid:
             return False
 
-        user_data = self.find_one({GoogleUserDataKeys.GOOGLE_UID: uid})
+        # Prevent number being accidentally passed in
+        user_data = self.find_one({GoogleUserDataKeys.GOOGLE_UID: str(uid)})
 
         return user_data and user_data.get(GoogleUserDataKeys.IS_SITE_ADMIN)
 

@@ -9,7 +9,8 @@ from responses import (
     QuestPostListResponse,
     QuestPostPublishSuccessResponse, QuestPostPublishFailedResponse,
     QuestPostGetSuccessResponse, QuestPostGetFailedResponse,
-    QuestPostEditSuccessResponse, QuestPostEditFailedResponse
+    QuestPostEditSuccessResponse, QuestPostEditFailedResponse,
+    QuestPostIDCheckResponse
 )
 
 from .base import EndpointBase, EPParamBase
@@ -17,7 +18,8 @@ from .base import EndpointBase, EPParamBase
 __all__ = ("EPQuestPostPublish", "EPQuestPostPublishParam",
            "EPQuestPostList", "EPQuestPostListParam",
            "EPQuestPostGet", "EPQuestPostGetParam",
-           "EPQuestPostEdit")
+           "EPQuestPostEdit",
+           "EPQuestPostIDCheck")
 
 
 # region Quest Post / Publish
@@ -25,6 +27,7 @@ __all__ = ("EPQuestPostPublish", "EPQuestPostPublishParam",
 class EPQuestPostPublishParam(EPParamBase):
     """Parameters for the request of publishing a quest post."""
 
+    SEQ_ID = "seq_id"
     TITLE = "title"
     LANG_CODE = "lang"
     GENERAL_INFO = "general"
@@ -61,6 +64,7 @@ class EPQuestPostPublishParam(EPParamBase):
 
 
 quest_post_pub_args = EndpointBase.base_args() | {
+    EPQuestPostPublishParam.SEQ_ID: fields.Int(),
     EPQuestPostPublishParam.TITLE: fields.Str(),
     EPQuestPostPublishParam.LANG_CODE: fields.Str(),
     EPQuestPostPublishParam.GENERAL_INFO: fields.Str(),
@@ -79,6 +83,7 @@ class EPQuestPostPublish(EndpointBase):
         if not is_user_admin:
             return QuestPostPublishFailedResponse(ResponseCodeCollection.FAILED_QUEST_NOT_PUBLISHED_NOT_ADMIN), 401
 
+        seq_id = args[EPQuestPostPublishParam.SEQ_ID]
         title = args[EPQuestPostPublishParam.TITLE]
         lang_code = args[EPQuestPostPublishParam.LANG_CODE]
         general_info = args[EPQuestPostPublishParam.GENERAL_INFO]
@@ -86,9 +91,12 @@ class EPQuestPostPublish(EndpointBase):
         positional_info = EPQuestPostPublishParam.pos_info_to_model_key(args[EPQuestPostPublishParam.POSITION_INFO])
         addendum = args[EPQuestPostPublishParam.ADDENDUM]
 
-        new_seq_id = QuestPostController.publish_post(title, lang_code, general_info, video, positional_info, addendum)
+        new_seq_id = QuestPostController.publish_post(
+            title, lang_code, general_info, video, positional_info, addendum, seq_id=seq_id
+        )
 
         return QuestPostPublishSuccessResponse(new_seq_id), 200
+
 
 # endregion
 
@@ -98,11 +106,13 @@ class EPQuestPostPublish(EndpointBase):
 class EPQuestPostListParam(EPParamBase):
     """Parameters for the request of a list of quest posts."""
 
+    LANG_CODE = "lang_code"
     START = "start"
     LIMIT = "limit"
 
 
 quest_post_list_args = EndpointBase.base_args() | {
+    EPQuestPostListParam.LANG_CODE: fields.Str(),
     EPQuestPostListParam.START: fields.Int(default=0),
     EPQuestPostListParam.LIMIT: fields.Int(default=25)
 }
@@ -116,9 +126,13 @@ class EPQuestPostList(EndpointBase):
         start_idx = args[EPQuestPostListParam.START]
 
         is_user_admin = GoogleUserDataController.is_user_admin(args[EPQuestPostListParam.GOOGLE_UID])
-        posts = QuestPostController.get_posts(start=start_idx, limit=args[EPQuestPostListParam.LIMIT])
+        lang_code = args[EPQuestPostListParam.LANG_CODE]
+        posts, post_count = QuestPostController.get_posts(
+            lang_code, start=start_idx, limit=args[EPQuestPostListParam.LIMIT]
+        )
 
-        return QuestPostListResponse(is_user_admin, posts, start_idx), 200
+        return QuestPostListResponse(is_user_admin, posts, start_idx, post_count), 200
+
 
 # endregion
 
@@ -129,7 +143,7 @@ class EPQuestPostGetParam(EPParamBase):
     """Parameters for the request of getting a quest post."""
 
     SEQ_ID = "seq_id"
-    LANG_CODE = "lang_code"
+    LANG_CODE = "lang"
     INCREASE_COUNT = "inc_count"
 
 
@@ -145,17 +159,18 @@ class EPQuestPostGet(EndpointBase):
 
     @use_args(quest_post_get_args, location="query")
     def get(self, args):
-        seq_id = args[EPQuestPostGetParam.SEQ_ID]
-
         is_user_admin = GoogleUserDataController.is_user_admin(args[EPQuestPostGetParam.GOOGLE_UID])
-        post = QuestPostController.get_post(seq_id,
-                                            args[EPQuestPostGetParam.LANG_CODE],
-                                            args[EPQuestPostGetParam.INCREASE_COUNT])
 
-        if not post:
-            return QuestPostGetFailedResponse(ResponseCodeCollection.FAILED_POST_NOT_EXISTS), 200
+        seq_id = args[EPQuestPostGetParam.SEQ_ID]
+        lang_code = args[EPQuestPostGetParam.LANG_CODE]
+        increase_count = args[EPQuestPostGetParam.INCREASE_COUNT]
+        result = QuestPostController.get_post(seq_id, lang_code, increase_count)
 
-        return QuestPostGetSuccessResponse(is_user_admin, post), 200
+        if not result.post:
+            return QuestPostGetFailedResponse(ResponseCodeCollection.FAILED_POST_NOT_EXISTS), 404
+
+        return QuestPostGetSuccessResponse(is_user_admin, result), 200
+
 
 # endregion
 
@@ -210,5 +225,39 @@ class EPQuestPostEdit(EndpointBase):
             return QuestPostEditSuccessResponse(seq_id), 200
 
         return QuestPostEditSuccessResponse(seq_id), 200
+
+
+# endregion
+
+
+# region Quest Post / ID Check
+
+class EPQuestPostIDCheckParam(EPParamBase):
+    """Parameters for the request of checking the ID availability."""
+
+    SEQ_ID = "seq_id"
+    LANG_CODE = "lang"
+
+
+quest_post_id_check_args = EndpointBase.base_args() | {
+    EPQuestPostIDCheckParam.SEQ_ID: fields.Int(missing=None),
+    EPQuestPostIDCheckParam.LANG_CODE: fields.Str()
+}
+
+
+class EPQuestPostIDCheck(EndpointBase):
+    """Endpoint resource to check the ID availability."""
+
+    @use_args(quest_post_id_check_args, location="query")
+    def get(self, args):
+        is_user_admin = GoogleUserDataController.is_user_admin(args[EPQuestPostIDCheckParam.GOOGLE_UID])
+        if not is_user_admin:
+            return QuestPostIDCheckResponse(False, False), 200
+
+        seq_id = args[EPQuestPostIDCheckParam.SEQ_ID]
+        lang_code = args[EPQuestPostIDCheckParam.LANG_CODE]
+        available = QuestPostController.is_id_lang_available(seq_id, lang_code)
+
+        return QuestPostIDCheckResponse(is_user_admin, available), 200
 
 # endregion

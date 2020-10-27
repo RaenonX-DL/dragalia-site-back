@@ -2,7 +2,8 @@ from flask import Flask
 from flask_cors import CORS
 
 from responses import ResponseBodyEncoder
-from api import attach_endpoints
+from api import attach_api
+from error import setup_error
 
 __all__ = ("app",)
 
@@ -23,7 +24,10 @@ app.config.from_object(AppConfig)
 cors = CORS(app, resources={r"/*": {"origins": "*"}})
 
 # Setup API resources
-attach_endpoints(app)
+attach_api(app)
+
+# Setup error handlers
+setup_error(app)
 
 # TODO: Setup sleep preventer
 # TODO: Google Analytics

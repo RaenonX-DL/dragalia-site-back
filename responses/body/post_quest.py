@@ -2,7 +2,7 @@
 from abc import ABC
 from typing import Any
 
-from controllers import QuestPostKey
+from controllers import QuestPostGetOneResult, QuestPostKey
 from responses.code import ResponseCodeCollection
 
 from .basic import Response, ResponseKey
@@ -10,8 +10,11 @@ from .basic import Response, ResponseKey
 __all__ = ("QuestPostPublishSuccessResponse", "QuestPostPublishFailedResponse", "QuestPostPublishSuccessResponseKey",
            "QuestPostListResponse", "QuestPostListResponseKey",
            "QuestPostGetSuccessResponse", "QuestPostGetFailedResponse", "QuestPostGetSuccessResponseKey",
-           "QuestPostEditSuccessResponse", "QuestPostEditFailedResponse", "QuestPostEditSuccessResponseKey")
+           "QuestPostEditSuccessResponse", "QuestPostEditFailedResponse", "QuestPostEditSuccessResponseKey",
+           "QuestPostIDCheckResponseKey", "QuestPostIDCheckResponse")
 
+
+# region Quest Post / Update (Base of edit/publish)
 
 class QuestPostUpdateSuccessResponseKey(ResponseKey, ABC):
     """Response keys of successfully published/edited a post."""
@@ -37,6 +40,10 @@ class QuestPostUpdateSuccessResponse(Response, ABC):
 class QuestPostUpdateFailedResponse(Response, ABC):
     """Response body of failed to publish/edit a post."""
 
+# endregion
+
+
+# region Quest Post / Publish
 
 class QuestPostPublishSuccessResponseKey(QuestPostUpdateSuccessResponseKey):
     """Response keys of successfully published a post."""
@@ -49,6 +56,10 @@ class QuestPostPublishSuccessResponse(QuestPostUpdateSuccessResponse):
 class QuestPostPublishFailedResponse(QuestPostUpdateFailedResponse):
     """Response body of failed to publish a post."""
 
+# endregion
+
+
+# region Quest Post / List
 
 class QuestPostListResponseKey(ResponseKey):
     """
@@ -60,6 +71,7 @@ class QuestPostListResponseKey(ResponseKey):
 
     POSTS = "posts"
     START_IDX = "startIdx"
+    POST_COUNT = "postCount"
 
     # These keys need to be consistent with the definition structure at the front side
     # Type name: `PostLintEntry`
@@ -90,20 +102,26 @@ class QuestPostListResponseKey(ResponseKey):
 class QuestPostListResponse(Response):
     """Response body of getting a quest post list."""
 
-    def __init__(self, is_admin: bool, posts: list[dict[str, Any]], start_idx: int):
+    def __init__(self, is_admin: bool, posts: list[dict[str, Any]], start_idx: int, post_count: int):
         super().__init__(ResponseCodeCollection.SUCCESS)
 
         self._is_admin = is_admin
         self._start_idx = start_idx
         self._posts = QuestPostListResponseKey.convert_posts_key(posts)
+        self._post_count = post_count
 
     def serialize(self):
         return super().serialize() | {
             QuestPostListResponseKey.POSTS: self._posts,
             QuestPostListResponseKey.START_IDX: self._start_idx,
+            QuestPostListResponseKey.POST_COUNT: self._post_count,
             QuestPostListResponseKey.IS_ADMIN: self._is_admin
         }
 
+# endregion
+
+
+# region Quest Post / Get
 
 class QuestPostGetSuccessResponseKey(ResponseKey):
     """
@@ -138,6 +156,11 @@ class QuestPostGetSuccessResponseKey(ResponseKey):
 
     VIEW_COUNT = "viewCount"
 
+    # Other keys not related to post
+
+    IS_ALT_LANG = "isAltLang"
+    OTHER_LANGS = "otherLangs"
+
     @classmethod
     def convert_info_key(cls, pos_info: list[dict[str, Any]]):
         ret = []
@@ -168,8 +191,10 @@ class QuestPostGetSuccessResponseKey(ResponseKey):
 class QuestPostGetSuccessResponse(Response):
     """Response body of getting a quest post list."""
 
-    def __init__(self, is_admin: bool, post: dict[str, Any]):
+    def __init__(self, is_admin: bool, get_result: QuestPostGetOneResult):
         super().__init__(ResponseCodeCollection.SUCCESS)
+
+        post = get_result.post
 
         self._is_admin = is_admin
         self._seq_id = post[QuestPostKey.SEQ_ID]
@@ -184,6 +209,9 @@ class QuestPostGetSuccessResponse(Response):
         self._modify_notes = QuestPostGetSuccessResponseKey.convert_modify_notes_key(post[QuestPostKey.MODIFY_NOTES])
         self._view_count = post[QuestPostKey.VIEW_COUNT]
 
+        self._is_alt_lang = get_result.is_alt_lang
+        self._other_langs = get_result.other_langs
+
     def serialize(self):
         return super().serialize() | {
             QuestPostGetSuccessResponseKey.IS_ADMIN: self._is_admin,
@@ -197,13 +225,19 @@ class QuestPostGetSuccessResponse(Response):
             QuestPostGetSuccessResponseKey.DT_LAST_MODIFIED: self._modified,
             QuestPostGetSuccessResponseKey.DT_PUBLISHED: self._published,
             QuestPostGetSuccessResponseKey.MODIFY_NOTES: self._modify_notes,
-            QuestPostGetSuccessResponseKey.VIEW_COUNT: self._view_count
+            QuestPostGetSuccessResponseKey.VIEW_COUNT: self._view_count,
+            QuestPostGetSuccessResponseKey.IS_ALT_LANG: self._is_alt_lang,
+            QuestPostGetSuccessResponseKey.OTHER_LANGS: self._other_langs
         }
 
 
 class QuestPostGetFailedResponse(Response):
     """Response body of failing to get a post."""
 
+# endregion
+
+
+# region Quest Post / Edit
 
 class QuestPostEditSuccessResponseKey(QuestPostUpdateSuccessResponseKey):
     """Response keys of successfully edited a post."""
@@ -215,3 +249,32 @@ class QuestPostEditSuccessResponse(QuestPostUpdateSuccessResponse):
 
 class QuestPostEditFailedResponse(QuestPostUpdateFailedResponse):
     """Response body of failed to edit a post."""
+
+# endregion
+
+
+# region Quest Post / ID Check
+
+class QuestPostIDCheckResponseKey(ResponseKey):
+    """Response keys of a quest post ID check request."""
+
+    IS_ADMIN = "isAdmin"
+    AVAILABLE = "available"
+
+
+class QuestPostIDCheckResponse(Response):
+    """Response body of a quest post ID check request."""
+
+    def __init__(self, is_admin: bool, available: bool):
+        super().__init__(ResponseCodeCollection.SUCCESS if is_admin else ResponseCodeCollection.FAILED_CHECK_NOT_ADMIN)
+
+        self._is_admin = is_admin
+        self._available = available
+
+    def serialize(self):
+        return super().serialize() | {
+            QuestPostIDCheckResponseKey.IS_ADMIN: self._is_admin,
+            QuestPostIDCheckResponseKey.AVAILABLE: self._available,
+        }
+
+# endregion
