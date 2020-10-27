@@ -15,7 +15,7 @@ class CustomApi(Api):
 
     def handle_error(self, e: Exception):
         """Force the error to be sent in the conventionalized json format."""
-        return Error500Response(f"{e.__class__.__name__}: {e}").serialize()
+        return Error500Response(f"{e.__class__.__name__}: {e}").serialize(), 500
 
 
 def attach_api(app):

@@ -8,20 +8,20 @@ def setup_error(app):
     # pylint: disable=unused-variable
     @app.errorhandler(400)
     def handle_400(error):
-        return Error400Response(error).serialize()
+        return Error400Response(error).serialize(), 400
 
     @app.errorhandler(404)
     def handle_404(error):
-        return Error404Response(error, "Resource not found").serialize()
+        return Error404Response(error, "Resource not found").serialize(), 404
 
     @app.errorhandler(405)
     def handle_405(error):
-        return Error405Response(error).serialize()
+        return Error405Response(error).serialize(), 405
 
     @app.errorhandler(422)
     def handle_422(error):
-        return Error422Response(error).serialize()
+        return Error422Response(error).serialize(), 422
 
     @app.errorhandler(500)
     def handle_500(error):
-        return Error500Response(error, "Server error").serialize()
+        return Error500Response(error, "Server error").serialize(), 500
