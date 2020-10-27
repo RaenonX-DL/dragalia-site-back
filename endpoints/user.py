@@ -22,8 +22,10 @@ user_login_args = EndpointBase.base_args() | {
 
 
 class EPUserLogin(EndpointBase):
+    """Endpoint to send a user login request."""
+
     @use_args(user_login_args)
-    def post(self, args):
+    def post(self, args):  # pylint: disable=no-self-use, missing-function-docstring
         result = GoogleUserDataController.user_logged_in(args[EPUserLoginParam.GOOGLE_UID],
                                                          args[EPUserLoginParam.GOOGLE_EMAIL])
         if result == GoogleLoginType.UNKNOWN:

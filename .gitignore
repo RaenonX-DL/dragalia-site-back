@@ -3,3 +3,6 @@
 
 # Virtual environment
 venv/
+
+# Batch files
+*.sh

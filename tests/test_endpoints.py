@@ -1,7 +1,7 @@
 from flask import url_for
 
 from endpoints import EPUserLoginParam, EPQuestPostListParam, EPQuestPostGetParam
-from responses import Response, ResponseCodeCollection, QuestPostListResponseKey
+from responses import ResponseCodeCollection, QuestPostListResponseKey
 
 
 def test_user_login(client):
@@ -17,16 +17,18 @@ def test_user_login(client):
 
     response = r.json
 
-    assert response == Response(ResponseCodeCollection.SUCCESS).serialize()
+    assert response[QuestPostListResponseKey.CODE] in (100, 101)
+    assert response[QuestPostListResponseKey.SUCCESS]
 
 
 def test_quest_posts_list(client):
     r = client.get(
         url_for("posts.quest.list"),
-        json={
+        query_string={
             EPQuestPostListParam.GOOGLE_UID: "Test",
             EPQuestPostListParam.START: 0,
-            EPQuestPostListParam.LIMIT: 30
+            EPQuestPostListParam.LIMIT: 30,
+            EPQuestPostListParam.LANG_CODE: "en"
         }
     )
 
@@ -34,25 +36,25 @@ def test_quest_posts_list(client):
 
     response = r.json
 
+    assert response[QuestPostListResponseKey.CODE] == ResponseCodeCollection.SUCCESS.code
     assert not response[QuestPostListResponseKey.IS_ADMIN]
     assert response[QuestPostListResponseKey.SUCCESS]
-    assert response[QuestPostListResponseKey.CODE] == ResponseCodeCollection.SUCCESS.code
 
 
 def test_quests_post_get(client):
     r = client.get(
         url_for("posts.quest.get"),
-        json={
+        query_string={
             EPQuestPostGetParam.GOOGLE_UID: "Test",
-            EPQuestPostGetParam.SEQ_ID: 1,
-            EPQuestPostGetParam.LANG_CODE: "cht"
+            EPQuestPostGetParam.SEQ_ID: 99999999999999,
+            EPQuestPostGetParam.LANG_CODE: "cht",
+            EPQuestPostGetParam.INCREASE_COUNT: 1
         }
     )
 
-    assert r.status_code == 200
+    assert r.status_code == 404
 
     response = r.json
 
-    assert not response[QuestPostListResponseKey.IS_ADMIN]
-    assert response[QuestPostListResponseKey.SUCCESS]
-    assert response[QuestPostListResponseKey.CODE] == ResponseCodeCollection.SUCCESS.code
+    assert response[QuestPostListResponseKey.CODE] == ResponseCodeCollection.FAILED_POST_NOT_EXISTS.code
+    assert not response[QuestPostListResponseKey.SUCCESS]

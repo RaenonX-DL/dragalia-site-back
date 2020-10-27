@@ -4,8 +4,6 @@
 
 Get the quest post list.
 
-This only returns
-
 ## Method
 
 `POST`

@@ -1,5 +1,6 @@
 """Various configs related to the database and the connection to it."""
 import os
+import sys
 import time
 
 from pymongo import MongoClient
@@ -11,7 +12,7 @@ __all__ = ("MONGO_URL", "MONGO_CLIENT", "get_single_db_name", "SINGLE_DB_NAME", 
 MONGO_URL = os.environ.get("MONGO_URL")
 if not MONGO_URL:
     print("Specify connection string to MongoDB instance as `MONGO_URL` in environment variable.")
-    exit(1)
+    sys.exit(1)
 
 MONGO_CLIENT = MongoClient(MONGO_URL)
 

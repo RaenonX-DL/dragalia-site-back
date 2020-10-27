@@ -12,6 +12,8 @@ DB_NAME = "user"
 
 
 class GoogleLoginType(Enum):
+    """Google Login outcome."""
+
     UNKNOWN = -1
 
     NEW_REGISTER = 0
@@ -20,6 +22,7 @@ class GoogleLoginType(Enum):
 
 class GoogleUserDataKeys:
     """Keys for a single google user data."""
+
     GOOGLE_UID = "uid"
     GOOGLE_EMAIL = "em"
     LOGIN_COUNT = "lc"
@@ -29,6 +32,7 @@ class GoogleUserDataKeys:
 
 class _GoogleUserDataController(BaseCollection):
     """Google user data controller."""
+
     database_name = DB_NAME
     collection_name = "google"
 
@@ -61,7 +65,8 @@ class _GoogleUserDataController(BaseCollection):
 
         if update_result.modified_count > 0:
             return GoogleLoginType.ALREADY_REGISTERED
-        elif update_result.upserted_id:
+
+        if update_result.upserted_id:
             return GoogleLoginType.NEW_REGISTER
 
         return GoogleLoginType.UNKNOWN

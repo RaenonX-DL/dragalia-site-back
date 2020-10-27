@@ -1,3 +1,4 @@
+"""Main application."""
 from flask import Flask
 from flask_cors import CORS
 
@@ -29,8 +30,11 @@ attach_api(app)
 # Setup error handlers
 setup_error(app)
 
+# pylint: disable=fixme
 # TODO: Setup sleep preventer
 # TODO: Google Analytics
+# TODO: API Endpoints documentation
+# pylint: enable=fixme
 
 if __name__ == "__main__":
     app.run(debug=True)

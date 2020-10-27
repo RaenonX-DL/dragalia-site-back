@@ -18,6 +18,7 @@ __all__ = ("QuestPostPublishSuccessResponse", "QuestPostPublishFailedResponse", 
 
 class QuestPostUpdateSuccessResponseKey(ResponseKey, ABC):
     """Response keys of successfully published/edited a post."""
+
     IS_ADMIN = "isAdmin"
 
     POST_SEQ_ID = "seqId"
@@ -67,6 +68,7 @@ class QuestPostListResponseKey(ResponseKey):
 
     Keys must be consistent with the type ``QuestPostListResponse`` at the front side.
     """
+
     IS_ADMIN = "isAdmin"
 
     POSTS = "posts"
@@ -84,6 +86,7 @@ class QuestPostListResponseKey(ResponseKey):
 
     @classmethod
     def convert_posts_key(cls, posts: list[dict[str, Any]]):
+        """Convert the keys in ``posts`` from model key to be the keys for the response."""
         ret = []
 
         for post in posts:
@@ -129,6 +132,7 @@ class QuestPostGetSuccessResponseKey(ResponseKey):
 
     Keys must be consistent with the type ``QuestPostGetResponse`` at the front side.
     """
+
     IS_ADMIN = "isAdmin"
 
     SEQ_ID = "seqId"
@@ -163,6 +167,7 @@ class QuestPostGetSuccessResponseKey(ResponseKey):
 
     @classmethod
     def convert_info_key(cls, pos_info: list[dict[str, Any]]):
+        """Convert the keys in ``pos_info`` from model key to be the keys for the response."""
         ret = []
 
         for post in pos_info:
@@ -177,6 +182,7 @@ class QuestPostGetSuccessResponseKey(ResponseKey):
 
     @classmethod
     def convert_modify_notes_key(cls, modify_notes: list[dict[str, Any]]):
+        """Convert the keys in ``modify_notes`` from model key to be the keys for the response."""
         ret = []
 
         for mod_note in modify_notes:
@@ -190,6 +196,8 @@ class QuestPostGetSuccessResponseKey(ResponseKey):
 
 class QuestPostGetSuccessResponse(Response):
     """Response body of getting a quest post list."""
+
+    # pylint: disable=too-many-instance-attributes
 
     def __init__(self, is_admin: bool, get_result: QuestPostGetOneResult):
         super().__init__(ResponseCodeCollection.SUCCESS)

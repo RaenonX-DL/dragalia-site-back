@@ -6,6 +6,8 @@ __all__ = ("ResponseCode", "ResponseCodeCollection")
 
 @dataclass
 class ResponseCode:
+    """Response code object."""
+
     code: int
     success: bool
     description: str

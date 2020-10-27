@@ -15,6 +15,8 @@ DB_NAME = "post"
 
 @dataclass
 class QuestPostGetOneResult:
+    """Result object of getting a single post."""
+
     post: dict[str, Any]
     is_alt_lang: bool
     other_langs: list[str]
@@ -58,6 +60,7 @@ class QuestPostKey:
 
     @classmethod
     def is_positional_info_completed(cls, positional_info_single: dict[str, str]) -> bool:
+        """Check if ``positional_info_single`` has all the required keys."""
         return positional_info_single.keys() == {cls.INFO_POSITION, cls.INFO_BUILDS, cls.INFO_ROTATIONS, cls.INFO_TIPS}
 
 
@@ -97,7 +100,8 @@ class _QuestPostController(BaseCollection):
 
         return self.find_one({QuestPostKey.SEQ_ID: seq_id, QuestPostKey.LANG_CODE: lang_code}) is None
 
-    def get_post(self, seq_id: int, lang_code: str = "cht", inc_count: bool = True) -> QuestPostGetOneResult:
+    def get_post(
+            self, seq_id: int, lang_code: str = "cht", inc_count: bool = True) -> QuestPostGetOneResult:
         """
         Get a post by its ``seq_id`` and ``lang_code`` with available languages and if it's in an alt language.
 
@@ -132,7 +136,8 @@ class _QuestPostController(BaseCollection):
 
         return QuestPostGetOneResult(post, in_alt_lang, other_langs)
 
-    def get_posts(self, lang_code: str, /, start: int = 0, limit: int = 0) -> tuple[list[dict[str, Any]], int]:
+    def get_posts(
+            self, lang_code: str, /, start: int = 0, limit: int = 0) -> tuple[list[dict[str, Any]], int]:
         """
         Get the posts sorted by the last modified date DESC and the total post count.
 
@@ -166,8 +171,9 @@ class _QuestPostController(BaseCollection):
             self.count_documents({QuestPostKey.LANG_CODE: lang_code})
         )
 
-    def publish_post(self, title: str, lang_code: str, general_info: str, video: str,
-                     position_info: list[dict[str, str]], addendum: str, /, seq_id: Optional[int] = None) -> int:
+    def publish_post(
+            self, title: str, lang_code: str, general_info: str, video: str,
+            position_info: list[dict[str, str]], addendum: str, /, seq_id: Optional[int] = None) -> int:
         """
         Publish a quest post and get its sequential ID.
 
@@ -208,8 +214,10 @@ class _QuestPostController(BaseCollection):
 
         return new_seq_id
 
-    def edit_post(self, seq_id: int, title: str, lang_code: str, general_info: str, video: str,
-                  position_info: list[dict[str, str]], addendum: str, modify_note: str) -> UpdateResult:
+    def edit_post(
+            self, seq_id: int, title: str, lang_code: str, general_info: str, video: str,
+            position_info: list[dict[str, str]], addendum: str,
+            modify_note: str) -> UpdateResult:
         """
         Edit a quest post.
 
@@ -227,6 +235,7 @@ class _QuestPostController(BaseCollection):
         :return: result of the update
         :raises ValueError: positional info (`position_info`) is incomplete or not using the model key
         """
+        # pylint: disable=too-many-arguments
         now = datetime.utcnow()
 
         if any(not QuestPostKey.is_positional_info_completed(info) for info in position_info):
@@ -261,8 +270,6 @@ class _QuestPostController(BaseCollection):
 
         # `NO_CHANGE` is impossible for now since each time a modification note will be pushed
         return UpdateResult.UPDATED if update_result.modified_count > 0 else UpdateResult.NO_CHANGE
-
-    # DRAFT: Data caching
 
 
 QuestPostController = _QuestPostController()

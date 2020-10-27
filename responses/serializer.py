@@ -12,6 +12,7 @@ class ResponseBodyEncoder(JSONEncoder):
     """JSON encoder for the response body."""
 
     def default(self, obj):
+        # pylint: disable=arguments-differ
         if isinstance(obj, Response):
             return obj.serialize()
         if isinstance(obj, ResponseCode):

@@ -1,5 +1,6 @@
 [flake8]
 count = True
+
 select =
     # Runtime errors (Syntax, Indentation, IO)
     E9,
@@ -15,7 +16,12 @@ select =
     F82,
     # Duplicated argument names
     F83
+
+exclude =
+    venv/
+
 max-complexity = 10
+
 max-line-length = 119
+
 show-source = True
-statistics = True

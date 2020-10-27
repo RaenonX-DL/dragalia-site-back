@@ -1,3 +1,4 @@
+"""Convenient functions to extract information from the environment variables."""
 import os
 
 __all__ = ("is_testing",)

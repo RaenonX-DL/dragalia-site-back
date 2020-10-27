@@ -4,22 +4,24 @@ from responses import Error400Response, Error404Response, Error405Response, Erro
 
 
 def setup_error(app):
+    """Setup errors for ``app``."""
+    # pylint: disable=unused-variable
     @app.errorhandler(400)
-    def handle_400(e):
-        return Error400Response(e).serialize()
+    def handle_400(error):
+        return Error400Response(error).serialize()
 
     @app.errorhandler(404)
-    def handle_404(e):
-        return Error404Response(e, "Resource not found").serialize()
+    def handle_404(error):
+        return Error404Response(error, "Resource not found").serialize()
 
     @app.errorhandler(405)
-    def handle_405(e):
-        return Error405Response(e).serialize()
+    def handle_405(error):
+        return Error405Response(error).serialize()
 
     @app.errorhandler(422)
-    def handle_422(e):
-        return Error422Response(e).serialize()
+    def handle_422(error):
+        return Error422Response(error).serialize()
 
     @app.errorhandler(500)
-    def handle_500(e):
-        return Error500Response(e, "Server error").serialize()
+    def handle_500(error):
+        return Error500Response(error, "Server error").serialize()

@@ -1,5 +1,9 @@
 # Template .pylintrc file https://raw.githubusercontent.com/datawire/quark/master/.pylintrc
 
+[MASTER]
+
+ignore=venv/,
+
 [BASIC]
 
 # Reason of the good names:
@@ -9,6 +13,11 @@
 good-names=_
 
 include-naming-hint=yes
+
+[SIMILARITIES]
+
+# Ignore imports when computing similarities
+ignore-imports=yes
 
 [DESIGN]
 

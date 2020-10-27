@@ -4,6 +4,7 @@ from webargs.flaskparser import use_args
 
 from controllers import GoogleUserDataController, QuestPostController, QuestPostKey
 from controllers.results import UpdateResult
+# pylint: disable=duplicate-code
 from responses import (
     ResponseCodeCollection,
     QuestPostListResponse,
@@ -78,7 +79,7 @@ class EPQuestPostPublish(EndpointBase):
     """Endpoint resource to publish a post."""
 
     @use_args(quest_post_pub_args)
-    def post(self, args):
+    def post(self, args):  # pylint: disable=no-self-use, missing-function-docstring
         is_user_admin = GoogleUserDataController.is_user_admin(args[EPQuestPostPublishParam.GOOGLE_UID])
         if not is_user_admin:
             return QuestPostPublishFailedResponse(ResponseCodeCollection.FAILED_QUEST_NOT_PUBLISHED_NOT_ADMIN), 401
@@ -122,7 +123,7 @@ class EPQuestPostList(EndpointBase):
     """Endpoint resource to get a quest post list."""
 
     @use_args(quest_post_list_args, location="query")
-    def get(self, args):
+    def get(self, args):  # pylint: disable=no-self-use, missing-function-docstring
         start_idx = args[EPQuestPostListParam.START]
 
         is_user_admin = GoogleUserDataController.is_user_admin(args[EPQuestPostListParam.GOOGLE_UID])
@@ -158,7 +159,7 @@ class EPQuestPostGet(EndpointBase):
     """Endpoint resource to get a post."""
 
     @use_args(quest_post_get_args, location="query")
-    def get(self, args):
+    def get(self, args):  # pylint: disable=no-self-use, missing-function-docstring
         is_user_admin = GoogleUserDataController.is_user_admin(args[EPQuestPostGetParam.GOOGLE_UID])
 
         seq_id = args[EPQuestPostGetParam.SEQ_ID]
@@ -200,7 +201,7 @@ class EPQuestPostEdit(EndpointBase):
     """Endpoint resource to get a post."""
 
     @use_args(quest_post_edit_args)
-    def post(self, args):
+    def post(self, args):  # pylint: disable=no-self-use, missing-function-docstring
         is_user_admin = GoogleUserDataController.is_user_admin(args[EPQuestPostEditParam.GOOGLE_UID])
         if not is_user_admin:
             return QuestPostPublishFailedResponse(ResponseCodeCollection.FAILED_QUEST_NOT_PUBLISHED_NOT_ADMIN), 401
@@ -249,7 +250,7 @@ class EPQuestPostIDCheck(EndpointBase):
     """Endpoint resource to check the ID availability."""
 
     @use_args(quest_post_id_check_args, location="query")
-    def get(self, args):
+    def get(self, args):  # pylint: disable=no-self-use, missing-function-docstring
         is_user_admin = GoogleUserDataController.is_user_admin(args[EPQuestPostIDCheckParam.GOOGLE_UID])
         if not is_user_admin:
             return QuestPostIDCheckResponse(False, False), 200
