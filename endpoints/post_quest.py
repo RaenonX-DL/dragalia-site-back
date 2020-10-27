@@ -65,7 +65,7 @@ class EPQuestPostPublishParam(EPParamBase):
 
 
 quest_post_pub_args = EndpointBase.base_args() | {
-    EPQuestPostPublishParam.SEQ_ID: fields.Int(),
+    EPQuestPostPublishParam.SEQ_ID: fields.Int(missing=None),
     EPQuestPostPublishParam.TITLE: fields.Str(),
     EPQuestPostPublishParam.LANG_CODE: fields.Str(),
     EPQuestPostPublishParam.GENERAL_INFO: fields.Str(),
