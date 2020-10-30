@@ -16,6 +16,8 @@ include-naming-hint=yes
 
 [SIMILARITIES]
 
+min-similarity-lines=10
+
 # Ignore imports when computing similarities
 ignore-imports=yes
 

@@ -4,7 +4,6 @@ from webargs.flaskparser import use_args
 
 from controllers import GoogleUserDataController, QuestPostController, QuestPostKey
 from controllers.results import UpdateResult
-# pylint: disable=duplicate-code
 from responses import (
     ResponseCodeCollection,
     QuestPostListResponse,
@@ -13,10 +12,10 @@ from responses import (
     QuestPostEditSuccessResponse, QuestPostEditFailedResponse,
     QuestPostIDCheckResponse
 )
+from .base import EndpointBase
+from .post_base import EPPostListParamBase, EPSinglePostParamBase, EPPostModifyParamBase
 
-from .base import EndpointBase, EPParamBase
-
-__all__ = ("EPQuestPostPublish", "EPQuestPostPublishParam",
+__all__ = ("EPQuestPostPublish",
            "EPQuestPostList", "EPQuestPostListParam",
            "EPQuestPostGet", "EPQuestPostGetParam",
            "EPQuestPostEdit",
@@ -25,12 +24,10 @@ __all__ = ("EPQuestPostPublish", "EPQuestPostPublishParam",
 
 # region Quest Post / Publish
 
-class EPQuestPostPublishParam(EPParamBase):
+class EPQuestPostPublishParam(EPSinglePostParamBase):
     """Parameters for the request of publishing a quest post."""
 
-    SEQ_ID = "seq_id"
     TITLE = "title"
-    LANG_CODE = "lang"
     GENERAL_INFO = "general"
     VIDEO = "video"
     POSITION_INFO = "positional"
@@ -64,10 +61,8 @@ class EPQuestPostPublishParam(EPParamBase):
         return ret
 
 
-quest_post_pub_args = EndpointBase.base_args() | {
-    EPQuestPostPublishParam.SEQ_ID: fields.Int(missing=None),
+quest_post_pub_args = EPSinglePostParamBase.base_args() | {
     EPQuestPostPublishParam.TITLE: fields.Str(),
-    EPQuestPostPublishParam.LANG_CODE: fields.Str(),
     EPQuestPostPublishParam.GENERAL_INFO: fields.Str(),
     EPQuestPostPublishParam.VIDEO: fields.Str(),
     EPQuestPostPublishParam.POSITION_INFO: fields.List(fields.Dict(keys=fields.Str(), values=fields.Str())),
@@ -76,7 +71,7 @@ quest_post_pub_args = EndpointBase.base_args() | {
 
 
 class EPQuestPostPublish(EndpointBase):
-    """Endpoint resource to publish a post."""
+    """Endpoint resource to publish a quest post."""
 
     @use_args(quest_post_pub_args)
     def post(self, args):  # pylint: disable=no-self-use, missing-function-docstring
@@ -104,19 +99,11 @@ class EPQuestPostPublish(EndpointBase):
 
 # region Quest Post / List
 
-class EPQuestPostListParam(EPParamBase):
+class EPQuestPostListParam(EPPostListParamBase):
     """Parameters for the request of a list of quest posts."""
 
-    LANG_CODE = "lang_code"
-    START = "start"
-    LIMIT = "limit"
 
-
-quest_post_list_args = EndpointBase.base_args() | {
-    EPQuestPostListParam.LANG_CODE: fields.Str(),
-    EPQuestPostListParam.START: fields.Int(default=0),
-    EPQuestPostListParam.LIMIT: fields.Int(default=25)
-}
+quest_post_list_args = EPPostListParamBase.base_args()
 
 
 class EPQuestPostList(EndpointBase):
@@ -140,23 +127,19 @@ class EPQuestPostList(EndpointBase):
 
 # region Quest Post / Get
 
-class EPQuestPostGetParam(EPParamBase):
+class EPQuestPostGetParam(EPSinglePostParamBase):
     """Parameters for the request of getting a quest post."""
 
-    SEQ_ID = "seq_id"
-    LANG_CODE = "lang"
     INCREASE_COUNT = "inc_count"
 
 
-quest_post_get_args = EndpointBase.base_args() | {
-    EPQuestPostGetParam.SEQ_ID: fields.Int(default=0),
-    EPQuestPostGetParam.LANG_CODE: fields.Str(),
+quest_post_get_args = EPSinglePostParamBase.base_args() | {
     EPQuestPostGetParam.INCREASE_COUNT: fields.Bool()
 }
 
 
 class EPQuestPostGet(EndpointBase):
-    """Endpoint resource to get a post."""
+    """Endpoint resource to get a quest post."""
 
     @use_args(quest_post_get_args, location="query")
     def get(self, args):  # pylint: disable=no-self-use, missing-function-docstring
@@ -167,7 +150,7 @@ class EPQuestPostGet(EndpointBase):
         increase_count = args[EPQuestPostGetParam.INCREASE_COUNT]
         result = QuestPostController.get_post(seq_id, lang_code, increase_count)
 
-        if not result.post:
+        if not result.data:
             return QuestPostGetFailedResponse(ResponseCodeCollection.FAILED_POST_NOT_EXISTS), 404
 
         return QuestPostGetSuccessResponse(is_user_admin, result), 200
@@ -178,27 +161,15 @@ class EPQuestPostGet(EndpointBase):
 
 # region Quest Post / Edit
 
-class EPQuestPostEditParam(EPQuestPostPublishParam):
-    """Parameters for the request of editting a quest post."""
-
-    SEQ_ID = "seq_id"
-    MODIFY_NOTE = "modify_note"
+class EPQuestPostEditParam(EPPostModifyParamBase, EPQuestPostPublishParam):
+    """Parameters for the request of editing a quest post."""
 
 
-quest_post_edit_args = EndpointBase.base_args() | {
-    EPQuestPostEditParam.SEQ_ID: fields.Int(default=0),
-    EPQuestPostEditParam.TITLE: fields.Str(),
-    EPQuestPostEditParam.LANG_CODE: fields.Str(),
-    EPQuestPostEditParam.GENERAL_INFO: fields.Str(),
-    EPQuestPostEditParam.VIDEO: fields.Str(),
-    EPQuestPostEditParam.POSITION_INFO: fields.List(fields.Dict(keys=fields.Str(), values=fields.Str())),
-    EPQuestPostEditParam.ADDENDUM: fields.Str(),
-    EPQuestPostEditParam.MODIFY_NOTE: fields.Str(),
-}
+quest_post_edit_args = quest_post_pub_args | EPPostModifyParamBase.base_args()
 
 
 class EPQuestPostEdit(EndpointBase):
-    """Endpoint resource to get a post."""
+    """Endpoint resource to edit a quest post."""
 
     @use_args(quest_post_edit_args)
     def post(self, args):  # pylint: disable=no-self-use, missing-function-docstring
@@ -233,24 +204,18 @@ class EPQuestPostEdit(EndpointBase):
 
 # region Quest Post / ID Check
 
-class EPQuestPostIDCheckParam(EPParamBase):
+class EPQuestPostIDCheckParam(EPSinglePostParamBase):
     """Parameters for the request of checking the ID availability."""
 
-    SEQ_ID = "seq_id"
-    LANG_CODE = "lang"
 
-
-quest_post_id_check_args = EndpointBase.base_args() | {
-    EPQuestPostIDCheckParam.SEQ_ID: fields.Int(missing=None),
-    EPQuestPostIDCheckParam.LANG_CODE: fields.Str()
-}
+quest_post_id_check_args = EPSinglePostParamBase.base_args()
 
 
 class EPQuestPostIDCheck(EndpointBase):
     """Endpoint resource to check the ID availability."""
 
     @use_args(quest_post_id_check_args, location="query")
-    def get(self, args):  # pylint: disable=no-self-use, missing-function-docstring
+    def get(self, args):  # pylint: disable=no-self-use, missing-function-docstring, duplicate-code
         is_user_admin = GoogleUserDataController.is_user_admin(args[EPQuestPostIDCheckParam.GOOGLE_UID])
         if not is_user_admin:
             return QuestPostIDCheckResponse(False, False), 200

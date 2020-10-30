@@ -1,6 +1,7 @@
 from flask import url_for
 
-from endpoints import EPUserLoginParam, EPQuestPostListParam, EPQuestPostGetParam
+from endpoints import EPUserLoginParam
+from endpoints.post_quest import EPQuestPostListParam, EPQuestPostGetParam
 from responses import ResponseCodeCollection, QuestPostListResponseKey
 
 

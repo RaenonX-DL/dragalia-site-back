@@ -1,34 +1,21 @@
-"""Quest Post data controllers."""
-from dataclasses import dataclass
+"""Quest post data controllers."""
 from datetime import datetime
 from typing import Any, Optional
 
 import pymongo
 
-from controllers.base import BaseCollection
+from controllers.base import MultilingualPostController, MultilingualPostKey, ModifiableDataKey
 from controllers.results import UpdateResult
 
-__all__ = ("QuestPostGetOneResult", "QuestPostKey", "QuestPostController")
+__all__ = ("QuestPostKey", "QuestPostController")
 
 DB_NAME = "post"
 
 
-@dataclass
-class QuestPostGetOneResult:
-    """Result object of getting a single post."""
-
-    post: dict[str, Any]
-    is_alt_lang: bool
-    other_langs: list[str]
-
-
-class QuestPostKey:
+class QuestPostKey(ModifiableDataKey, MultilingualPostKey):
     """Keys for a single quest post."""
 
-    SEQ_ID = "s"
     TITLE = "t"
-
-    LANG_CODE = "l"
 
     # BOSS_CODE = "b" - Not yet implemented
 
@@ -40,23 +27,8 @@ class QuestPostKey:
     INFO_BUILDS = "b"
     INFO_ROTATIONS = "r"
     INFO_TIPS = "t"
-    INFO_POSITION_COMP = f"{INFO_PARENT}.{INFO_POSITION}"
-    INFO_BUILDS_COMP = f"{INFO_PARENT}.{INFO_BUILDS}"
-    INFO_ROTATIONS_COMP = f"{INFO_PARENT}.{INFO_ROTATIONS}"
-    INFO_TIPS_COMP = f"{INFO_PARENT}.{INFO_TIPS}"
 
     ADDENDUM = "a"
-
-    DT_LAST_MODIFIED = "d_m"
-    DT_PUBLISHED = "d_p"
-
-    MODIFY_NOTES = "m_n"
-    MODIFY_DT = "dt"
-    MODIFY_NOTE = "n"
-    MODIFY_DT_COMP = f"{MODIFY_NOTES}.{MODIFY_DT}"
-    MODIFY_NOTE_COMP = f"{MODIFY_NOTES}.{MODIFY_NOTE}"
-
-    VIEW_COUNT = "c"
 
     @classmethod
     def is_positional_info_completed(cls, positional_info_single: dict[str, str]) -> bool:
@@ -64,77 +36,14 @@ class QuestPostKey:
         return positional_info_single.keys() == {cls.INFO_POSITION, cls.INFO_BUILDS, cls.INFO_ROTATIONS, cls.INFO_TIPS}
 
 
-class _QuestPostController(BaseCollection):
+class _QuestPostController(MultilingualPostController):
     """Quest post data controller."""
 
     database_name = DB_NAME
     collection_name = "quest"
 
     def __init__(self):
-        super().__init__(True)
-
-        self._post_cache: dict[tuple[int, str], Any] = {}
-
-    def build_indexes(self):
-        self.create_index(
-            [
-                (QuestPostKey.SEQ_ID, pymongo.DESCENDING),
-                (QuestPostKey.LANG_CODE, pymongo.ASCENDING)
-            ],
-            unique=True
-        )
-
-    def is_id_lang_available(self, seq_id: Optional[int], lang_code: str) -> bool:
-        """
-        Check if the given ID and language code is available.
-
-        :param seq_id: sequential ID to be checked
-        :param lang_code: language code to be checked
-        :return: if the combination is available
-        """
-        if not seq_id:
-            return True
-
-        if seq_id > self.get_next_seq_id(increase=False):
-            return False
-
-        return self.find_one({QuestPostKey.SEQ_ID: seq_id, QuestPostKey.LANG_CODE: lang_code}) is None
-
-    def get_post(
-            self, seq_id: int, lang_code: str = "cht", inc_count: bool = True) -> QuestPostGetOneResult:
-        """
-        Get a post by its ``seq_id`` and ``lang_code`` with available languages and if it's in an alt language.
-
-        Increases the post view count if ``inc_count`` is ``True``.
-
-        Will not check for the other available languages if the count will not be increased,
-        because such condition only happens when fetching the post for edit.0
-        """
-        other_langs = []
-        if inc_count:
-            other_langs = [
-                data[QuestPostKey.LANG_CODE]
-                for data in self.find(
-                    {QuestPostKey.SEQ_ID: seq_id, QuestPostKey.LANG_CODE: {"$ne": lang_code}},
-                    projection={QuestPostKey.LANG_CODE: 1}
-                )
-            ]
-
-        post = self.find_one_and_update(
-            {QuestPostKey.SEQ_ID: seq_id, QuestPostKey.LANG_CODE: lang_code},
-            {"$inc": {QuestPostKey.VIEW_COUNT: 1 if inc_count else 0}}
-        )
-        in_alt_lang = False
-
-        if not post:
-            post = self.find_one_and_update({QuestPostKey.SEQ_ID: seq_id}, {"$inc": {QuestPostKey.VIEW_COUNT: 1}})
-            in_alt_lang = True
-
-        if post:
-            # Using language code from key instead of post is because that we may get a post in alt lang
-            self._post_cache[(seq_id, post[QuestPostKey.LANG_CODE])] = post
-
-        return QuestPostGetOneResult(post, in_alt_lang, other_langs)
+        super().__init__(QuestPostKey)
 
     def get_posts(
             self, lang_code: str, /, start: int = 0, limit: int = 0) -> tuple[list[dict[str, Any]], int]:
@@ -177,7 +86,7 @@ class _QuestPostController(BaseCollection):
         """
         Publish a quest post and get its sequential ID.
 
-        Data in ``position_info`` should be insertion-ready (i.e. the key of each data is already using the key
+        Data in ``position_info`` should be insertion-ready (i.e. the keys of each data is already using the key
         from the data model).
 
         If ``seq_id`` is not specified, a new sequential ID will be used. Otherwise, use the given one.
@@ -189,7 +98,7 @@ class _QuestPostController(BaseCollection):
         :param position_info: positional info for each positions in the post
         :param addendum: addendum of the post
         :param seq_id: sequential ID of the post
-        :return: sequential ID for the newly published post
+        :return: sequential ID lf the newly published post
         :raises ValueError: positional info (`position_info`) is incomplete or not using the model key
         """
         new_seq_id = seq_id or self.get_next_seq_id()
@@ -236,40 +145,19 @@ class _QuestPostController(BaseCollection):
         :raises ValueError: positional info (`position_info`) is incomplete or not using the model key
         """
         # pylint: disable=too-many-arguments
-        now = datetime.utcnow()
 
-        if any(not QuestPostKey.is_positional_info_completed(info) for info in position_info):
-            raise ValueError("Incomplete positional info")
-
-        update_result = self.update_one(
+        return self.update_post(
+            seq_id,
+            lang_code,
             {
-                QuestPostKey.SEQ_ID: seq_id,
-                QuestPostKey.LANG_CODE: lang_code
+                QuestPostKey.TITLE: title,
+                QuestPostKey.GENERAL_INFO: general_info,
+                QuestPostKey.VIDEO: video,
+                QuestPostKey.INFO_PARENT: position_info,
+                QuestPostKey.ADDENDUM: addendum
             },
-            {
-                "$set": {
-                    QuestPostKey.TITLE: title,
-                    QuestPostKey.GENERAL_INFO: general_info,
-                    QuestPostKey.VIDEO: video,
-                    QuestPostKey.INFO_PARENT: position_info,
-                    QuestPostKey.ADDENDUM: addendum
-                },
-                "$push": {
-                    QuestPostKey.MODIFY_NOTES: {
-                        QuestPostKey.MODIFY_DT: now,
-                        QuestPostKey.MODIFY_NOTE: modify_note
-                    }
-                }
-            }
+            modify_note
         )
-
-        if update_result.matched_count == 0:
-            return UpdateResult.NOT_FOUND
-
-        del self._post_cache[(seq_id, lang_code)]
-
-        # `NO_CHANGE` is impossible for now since each time a modification note will be pushed
-        return UpdateResult.UPDATED if update_result.modified_count > 0 else UpdateResult.NO_CHANGE
 
 
 QuestPostController = _QuestPostController()

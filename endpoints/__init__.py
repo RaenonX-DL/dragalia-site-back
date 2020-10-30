@@ -1,10 +1,11 @@
 """Endpoint resources of the API."""
-from .post_quest import (
-    EPQuestPostList, EPQuestPostListParam,
-    EPQuestPostPublish, EPQuestPostPublishParam,
-    EPQuestPostGet, EPQuestPostGetParam,
-    EPQuestPostEdit,
-    EPQuestPostIDCheck
+from .post_analysis import (
+    EPCharacterAnalysisPostPublish, EPDragonAnalysisPostPublish,
+    EPAnalysisPostList,
+    EPAnalysisPostGet,
+    EPCharaAnalysisPostEdit, EPDragonAnalysisPostEdit,
+    EPAnalysisPostIDCheck
 )
+from .post_quest import EPQuestPostList, EPQuestPostPublish, EPQuestPostGet, EPQuestPostEdit, EPQuestPostIDCheck
 from .root import EPRootTest
 from .user import EPUserLogin, EPUserLoginParam

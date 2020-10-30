@@ -4,7 +4,6 @@ from webargs.flaskparser import use_args
 
 from controllers import GoogleUserDataController, GoogleLoginType
 from responses import UserLoginResponse, ResponseCodeCollection
-
 from .base import EndpointBase, EPParamBase
 
 __all__ = ("EPUserLogin", "EPUserLoginParam")
@@ -16,7 +15,7 @@ class EPUserLoginParam(EPParamBase):
     GOOGLE_EMAIL = "google_email"
 
 
-user_login_args = EndpointBase.base_args() | {
+user_login_args = EPParamBase.base_args() | {
     EPUserLoginParam.GOOGLE_EMAIL: fields.Str()
 }
 
