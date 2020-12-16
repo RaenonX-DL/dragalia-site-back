@@ -1,4 +1,4 @@
-"""Object analysis post data controllers."""
+"""Unit analysis post data controllers."""
 from datetime import datetime
 from enum import IntEnum
 from typing import Any, Optional
@@ -6,25 +6,25 @@ from typing import Any, Optional
 from controllers.base import ModifiableDataKey, MultilingualPostController, MultilingualPostKey
 from controllers.results import UpdateResult
 
-__all__ = ("ObjectAnalysisPostType", "ObjectAnalysisPostKey", "ObjectAnalysisPostController")
+__all__ = ("UnitAnalysisPostType", "UnitAnalysisPostKey", "UnitAnalysisPostController")
 
 DB_NAME = "post"
 
 
-class ObjectAnalysisPostType(IntEnum):
-    """Type of the object analysis post."""
+class UnitAnalysisPostType(IntEnum):
+    """Type of the unit analysis post."""
 
     CHARACTER = 1
     DRAGON = 2
 
 
-class ObjectAnalysisPostKey(ModifiableDataKey, MultilingualPostKey):
-    """Keys for a single object analysis post."""
+class UnitAnalysisPostKey(ModifiableDataKey, MultilingualPostKey):
+    """Keys for a single unit analysis post."""
 
     # Keys for all types
 
     TYPE = "tp"
-    OBJECT_NAME = "t"
+    UNIT_NAME = "t"
 
     SUMMARY = "sm"
     SUMMON_RESULT = "r"
@@ -68,14 +68,14 @@ class ObjectAnalysisPostKey(ModifiableDataKey, MultilingualPostKey):
         return c_skill_data.keys() == {cls.C_SKILL_NAME, cls.C_SKILL_INFO, cls.C_SKILL_ROTATIONS, cls.C_SKILL_TIPS}
 
 
-class _ObjectAnalysisPostController(MultilingualPostController):
-    """Object analysis post data controller."""
+class _UnitAnalysisPostController(MultilingualPostController):
+    """Unit analysis post data controller."""
 
     database_name = DB_NAME
     collection_name = "analysis"
 
     def __init__(self):
-        super().__init__(ObjectAnalysisPostKey)
+        super().__init__(UnitAnalysisPostKey)
 
     def get_posts(
             self, lang_code: str, /, start: int = 0, limit: int = 0
@@ -92,19 +92,19 @@ class _ObjectAnalysisPostController(MultilingualPostController):
         :return: list of post records
         """
         projection = {
-            ObjectAnalysisPostKey.SEQ_ID: 1,
-            ObjectAnalysisPostKey.LANG_CODE: 1,
-            ObjectAnalysisPostKey.TYPE: 1,
-            ObjectAnalysisPostKey.OBJECT_NAME: 1,
-            ObjectAnalysisPostKey.DT_LAST_MODIFIED: 1,
-            ObjectAnalysisPostKey.DT_PUBLISHED: 1,
-            ObjectAnalysisPostKey.VIEW_COUNT: 1
+            UnitAnalysisPostKey.SEQ_ID: 1,
+            UnitAnalysisPostKey.LANG_CODE: 1,
+            UnitAnalysisPostKey.TYPE: 1,
+            UnitAnalysisPostKey.UNIT_NAME: 1,
+            UnitAnalysisPostKey.DT_LAST_MODIFIED: 1,
+            UnitAnalysisPostKey.DT_PUBLISHED: 1,
+            UnitAnalysisPostKey.VIEW_COUNT: 1
         }
 
         return self._get_post_list(lang_code, projection, start=start, limit=limit)
 
     def publish_chara_post(
-            self, object_name: str, lang_code: str, summary: str, summon_result: str, passives: str,
+            self, unit_name: str, lang_code: str, summary: str, summon_result: str, passives: str,
             normal_attacks: str, special_fs: str, skills: [dict[str, str], dict[str, str]], tips_n_builds: str,
             videos: str, story: str, keywords: str, /,
             seq_id: Optional[int] = None) -> int:
@@ -116,7 +116,7 @@ class _ObjectAnalysisPostController(MultilingualPostController):
 
         If ``seq_id`` is not specified, a new sequential ID will be used. Otherwise, use the given one.
 
-        :param object_name: name of the character
+        :param unit_name: name of the character
         :param lang_code: language code of the post
         :param summary: summary for the character analysis
         :param summon_result: summon result of the corresponding character
@@ -137,41 +137,41 @@ class _ObjectAnalysisPostController(MultilingualPostController):
         new_seq_id = seq_id or self.get_next_seq_id()
         now = datetime.utcnow()
 
-        if any(not ObjectAnalysisPostKey.is_c_skill_data_completed(skill) for skill in skills):
+        if any(not UnitAnalysisPostKey.is_c_skill_data_completed(skill) for skill in skills):
             raise ValueError("Incomplete skill data")
 
         self.insert_one({
-            ObjectAnalysisPostKey.SEQ_ID: new_seq_id,
-            ObjectAnalysisPostKey.LANG_CODE: lang_code,
-            ObjectAnalysisPostKey.TYPE: ObjectAnalysisPostType.CHARACTER,
-            ObjectAnalysisPostKey.OBJECT_NAME: object_name,
-            ObjectAnalysisPostKey.SUMMARY: summary,
-            ObjectAnalysisPostKey.SUMMON_RESULT: summon_result,
-            ObjectAnalysisPostKey.PASSIVES: passives,
-            ObjectAnalysisPostKey.NORMAL_ATTACKS: normal_attacks,
-            ObjectAnalysisPostKey.C_FORCE_STRIKES: special_fs,
-            ObjectAnalysisPostKey.C_SKILLS: skills,
-            ObjectAnalysisPostKey.C_TIPS_N_BUILDS: tips_n_builds,
-            ObjectAnalysisPostKey.VIDEOS: videos,
-            ObjectAnalysisPostKey.STORY: story,
-            ObjectAnalysisPostKey.VIEW_COUNT: 0,
-            ObjectAnalysisPostKey.KEYWORDS: keywords,
-            ObjectAnalysisPostKey.MODIFY_NOTES: [],
-            ObjectAnalysisPostKey.DT_LAST_MODIFIED: now,
-            ObjectAnalysisPostKey.DT_PUBLISHED: now,
+            UnitAnalysisPostKey.SEQ_ID: new_seq_id,
+            UnitAnalysisPostKey.LANG_CODE: lang_code,
+            UnitAnalysisPostKey.TYPE: UnitAnalysisPostType.CHARACTER,
+            UnitAnalysisPostKey.UNIT_NAME: unit_name,
+            UnitAnalysisPostKey.SUMMARY: summary,
+            UnitAnalysisPostKey.SUMMON_RESULT: summon_result,
+            UnitAnalysisPostKey.PASSIVES: passives,
+            UnitAnalysisPostKey.NORMAL_ATTACKS: normal_attacks,
+            UnitAnalysisPostKey.C_FORCE_STRIKES: special_fs,
+            UnitAnalysisPostKey.C_SKILLS: skills,
+            UnitAnalysisPostKey.C_TIPS_N_BUILDS: tips_n_builds,
+            UnitAnalysisPostKey.VIDEOS: videos,
+            UnitAnalysisPostKey.STORY: story,
+            UnitAnalysisPostKey.VIEW_COUNT: 0,
+            UnitAnalysisPostKey.KEYWORDS: keywords,
+            UnitAnalysisPostKey.MODIFY_NOTES: [],
+            UnitAnalysisPostKey.DT_LAST_MODIFIED: now,
+            UnitAnalysisPostKey.DT_PUBLISHED: now,
         })
 
         return new_seq_id
 
     def publish_dragon_post(
-            self, object_name: str, lang_code: str, summary: str, summon_result: str, passives: str,
+            self, unit_name: str, lang_code: str, summary: str, summon_result: str, passives: str,
             normal_attacks: str, ultimate: str, notes: str, suitable_characters: str,
             videos: str, story: str, keywords: str, /,
             seq_id: Optional[int] = None) -> int:
         """
         Publish a dragon analysis post and get its sequential ID.
 
-        :param object_name: name of the dragon
+        :param unit_name: name of the dragon
         :param lang_code: language code of the post
         :param summary: summary for the dragon analysis
         :param summon_result: summon result of the corresponding dragon
@@ -192,30 +192,30 @@ class _ObjectAnalysisPostController(MultilingualPostController):
         now = datetime.utcnow()
 
         self.insert_one({
-            ObjectAnalysisPostKey.SEQ_ID: new_seq_id,
-            ObjectAnalysisPostKey.LANG_CODE: lang_code,
-            ObjectAnalysisPostKey.TYPE: ObjectAnalysisPostType.DRAGON,
-            ObjectAnalysisPostKey.OBJECT_NAME: object_name,
-            ObjectAnalysisPostKey.SUMMARY: summary,
-            ObjectAnalysisPostKey.SUMMON_RESULT: summon_result,
-            ObjectAnalysisPostKey.PASSIVES: passives,
-            ObjectAnalysisPostKey.NORMAL_ATTACKS: normal_attacks,
-            ObjectAnalysisPostKey.D_ULTIMATE: ultimate,
-            ObjectAnalysisPostKey.D_NOTES: notes,
-            ObjectAnalysisPostKey.D_SUITABLE_CHARACTERS: suitable_characters,
-            ObjectAnalysisPostKey.VIDEOS: videos,
-            ObjectAnalysisPostKey.STORY: story,
-            ObjectAnalysisPostKey.VIEW_COUNT: 0,
-            ObjectAnalysisPostKey.KEYWORDS: keywords,
-            ObjectAnalysisPostKey.MODIFY_NOTES: [],
-            ObjectAnalysisPostKey.DT_LAST_MODIFIED: now,
-            ObjectAnalysisPostKey.DT_PUBLISHED: now,
+            UnitAnalysisPostKey.SEQ_ID: new_seq_id,
+            UnitAnalysisPostKey.LANG_CODE: lang_code,
+            UnitAnalysisPostKey.TYPE: UnitAnalysisPostType.DRAGON,
+            UnitAnalysisPostKey.UNIT_NAME: unit_name,
+            UnitAnalysisPostKey.SUMMARY: summary,
+            UnitAnalysisPostKey.SUMMON_RESULT: summon_result,
+            UnitAnalysisPostKey.PASSIVES: passives,
+            UnitAnalysisPostKey.NORMAL_ATTACKS: normal_attacks,
+            UnitAnalysisPostKey.D_ULTIMATE: ultimate,
+            UnitAnalysisPostKey.D_NOTES: notes,
+            UnitAnalysisPostKey.D_SUITABLE_CHARACTERS: suitable_characters,
+            UnitAnalysisPostKey.VIDEOS: videos,
+            UnitAnalysisPostKey.STORY: story,
+            UnitAnalysisPostKey.VIEW_COUNT: 0,
+            UnitAnalysisPostKey.KEYWORDS: keywords,
+            UnitAnalysisPostKey.MODIFY_NOTES: [],
+            UnitAnalysisPostKey.DT_LAST_MODIFIED: now,
+            UnitAnalysisPostKey.DT_PUBLISHED: now,
         })
 
         return new_seq_id
 
     def edit_chara_post(
-            self, seq_id: int, object_name: str, lang_code: str, summary: str, summon_result: str, passives: str,
+            self, seq_id: int, unit_name: str, lang_code: str, summary: str, summon_result: str, passives: str,
             normal_attacks: str, special_fs: str, skills: [dict[str, str], dict[str, str]], tips_n_builds: str,
             videos: str, story: str, keywords: str, modify_note: str) -> UpdateResult:
         """
@@ -225,7 +225,7 @@ class _ObjectAnalysisPostController(MultilingualPostController):
         from the data model).
 
         :param seq_id: sequential ID of the post
-        :param object_name: name of the character
+        :param unit_name: name of the character
         :param lang_code: language code of the post
         :param summary: summary for the character analysis
         :param summon_result: summon result of the corresponding character
@@ -247,31 +247,31 @@ class _ObjectAnalysisPostController(MultilingualPostController):
             seq_id,
             lang_code,
             {
-                ObjectAnalysisPostKey.OBJECT_NAME: object_name,
-                ObjectAnalysisPostKey.SUMMARY: summary,
-                ObjectAnalysisPostKey.SUMMON_RESULT: summon_result,
-                ObjectAnalysisPostKey.PASSIVES: passives,
-                ObjectAnalysisPostKey.NORMAL_ATTACKS: normal_attacks,
-                ObjectAnalysisPostKey.C_FORCE_STRIKES: special_fs,
-                ObjectAnalysisPostKey.C_SKILLS: skills,
-                ObjectAnalysisPostKey.C_TIPS_N_BUILDS: tips_n_builds,
-                ObjectAnalysisPostKey.VIDEOS: videos,
-                ObjectAnalysisPostKey.STORY: story,
-                ObjectAnalysisPostKey.KEYWORDS: keywords,
+                UnitAnalysisPostKey.UNIT_NAME: unit_name,
+                UnitAnalysisPostKey.SUMMARY: summary,
+                UnitAnalysisPostKey.SUMMON_RESULT: summon_result,
+                UnitAnalysisPostKey.PASSIVES: passives,
+                UnitAnalysisPostKey.NORMAL_ATTACKS: normal_attacks,
+                UnitAnalysisPostKey.C_FORCE_STRIKES: special_fs,
+                UnitAnalysisPostKey.C_SKILLS: skills,
+                UnitAnalysisPostKey.C_TIPS_N_BUILDS: tips_n_builds,
+                UnitAnalysisPostKey.VIDEOS: videos,
+                UnitAnalysisPostKey.STORY: story,
+                UnitAnalysisPostKey.KEYWORDS: keywords,
             },
             modify_note,
-            addl_update_cond={ObjectAnalysisPostKey.TYPE: ObjectAnalysisPostType.CHARACTER}
+            addl_update_cond={UnitAnalysisPostKey.TYPE: UnitAnalysisPostType.CHARACTER}
         )
 
     def edit_dragon_post(
-            self, seq_id: int, object_name: str, lang_code: str, summary: str, summon_result: str, passives: str,
+            self, seq_id: int, unit_name: str, lang_code: str, summary: str, summon_result: str, passives: str,
             normal_attacks: str, ultimate: str, notes: str, suitable_characters: str,
             videos: str, story: str, keywords: str, modify_note: str) -> UpdateResult:
         """
         Edit a dragon analysis post.
 
         :param seq_id: sequential ID of the post
-        :param object_name: name of the dragon
+        :param unit_name: name of the dragon
         :param lang_code: language code of the post
         :param summary: summary for the dragon analysis
         :param summon_result: summon result of the corresponding dragon
@@ -292,21 +292,21 @@ class _ObjectAnalysisPostController(MultilingualPostController):
             seq_id,
             lang_code,
             {
-                ObjectAnalysisPostKey.OBJECT_NAME: object_name,
-                ObjectAnalysisPostKey.SUMMARY: summary,
-                ObjectAnalysisPostKey.SUMMON_RESULT: summon_result,
-                ObjectAnalysisPostKey.PASSIVES: passives,
-                ObjectAnalysisPostKey.NORMAL_ATTACKS: normal_attacks,
-                ObjectAnalysisPostKey.D_ULTIMATE: ultimate,
-                ObjectAnalysisPostKey.D_NOTES: notes,
-                ObjectAnalysisPostKey.D_SUITABLE_CHARACTERS: suitable_characters,
-                ObjectAnalysisPostKey.VIDEOS: videos,
-                ObjectAnalysisPostKey.STORY: story,
-                ObjectAnalysisPostKey.KEYWORDS: keywords,
+                UnitAnalysisPostKey.UNIT_NAME: unit_name,
+                UnitAnalysisPostKey.SUMMARY: summary,
+                UnitAnalysisPostKey.SUMMON_RESULT: summon_result,
+                UnitAnalysisPostKey.PASSIVES: passives,
+                UnitAnalysisPostKey.NORMAL_ATTACKS: normal_attacks,
+                UnitAnalysisPostKey.D_ULTIMATE: ultimate,
+                UnitAnalysisPostKey.D_NOTES: notes,
+                UnitAnalysisPostKey.D_SUITABLE_CHARACTERS: suitable_characters,
+                UnitAnalysisPostKey.VIDEOS: videos,
+                UnitAnalysisPostKey.STORY: story,
+                UnitAnalysisPostKey.KEYWORDS: keywords,
             },
             modify_note,
-            addl_update_cond={ObjectAnalysisPostKey.TYPE: ObjectAnalysisPostType.DRAGON}
+            addl_update_cond={UnitAnalysisPostKey.TYPE: UnitAnalysisPostType.DRAGON}
         )
 
 
-ObjectAnalysisPostController = _ObjectAnalysisPostController()
+UnitAnalysisPostController = _UnitAnalysisPostController()

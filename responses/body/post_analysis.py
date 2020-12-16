@@ -1,13 +1,11 @@
-"""Response body for getting the data related to object analysis posts."""
+"""Response body for getting the data related to unit analysis posts."""
 from typing import Any
 
-from controllers import MultilingualGetOneResult, ObjectAnalysisPostKey, ObjectAnalysisPostType
+from controllers import MultilingualGetOneResult, UnitAnalysisPostKey, UnitAnalysisPostType
 from .post_base import (
-    PostPublishSuccessResponseKey, PostPublishSuccessResponse, PostPublishFailedResponse,
-    PostListResponseKey, PostListResponse,
-    PostGetSuccessResponseKey, PostGetSuccessResponse, PostGetFailedResponse,
-    PostEditSuccessResponseKey, PostEditSuccessResponse, PostEditFailedResponse,
-    PostIDCheckResponse, PostIDCheckResponseKey
+    PostEditFailedResponse, PostEditSuccessResponse, PostEditSuccessResponseKey, PostGetFailedResponse,
+    PostGetSuccessResponse, PostGetSuccessResponseKey, PostIDCheckResponse, PostIDCheckResponseKey, PostListResponse,
+    PostListResponseKey, PostPublishFailedResponse, PostPublishSuccessResponse, PostPublishSuccessResponseKey,
 )
 
 __all__ = ("CharaAnalysisPublishSuccessResponse", "CharaAnalysisPublishFailedResponse",
@@ -68,7 +66,7 @@ class AnalysisPostListResponseKey(PostListResponseKey):
     POSTS_SEQ_ID = "seqId"
     POSTS_LANG = "lang"
     POSTS_TYPE = "type"
-    POSTS_OBJECT_NAME = "objectName"
+    POSTS_UNIT_NAME = "unitName"
     POSTS_LAST_MODIFIED = "modified"
     POSTS_PUBLISHED = "published"
     POSTS_VIEW_COUNT = "viewCount"
@@ -80,13 +78,13 @@ class AnalysisPostListResponseKey(PostListResponseKey):
 
         for post in posts:
             ret.append({
-                cls.POSTS_SEQ_ID: post[ObjectAnalysisPostKey.SEQ_ID],
-                cls.POSTS_LANG: post[ObjectAnalysisPostKey.LANG_CODE],
-                cls.POSTS_TYPE: post[ObjectAnalysisPostKey.TYPE],
-                cls.POSTS_OBJECT_NAME: post[ObjectAnalysisPostKey.OBJECT_NAME],
-                cls.POSTS_LAST_MODIFIED: post[ObjectAnalysisPostKey.DT_LAST_MODIFIED],
-                cls.POSTS_PUBLISHED: post[ObjectAnalysisPostKey.DT_PUBLISHED],
-                cls.POSTS_VIEW_COUNT: post[ObjectAnalysisPostKey.VIEW_COUNT],
+                cls.POSTS_SEQ_ID: post[UnitAnalysisPostKey.SEQ_ID],
+                cls.POSTS_LANG: post[UnitAnalysisPostKey.LANG_CODE],
+                cls.POSTS_TYPE: post[UnitAnalysisPostKey.TYPE],
+                cls.POSTS_UNIT_NAME: post[UnitAnalysisPostKey.UNIT_NAME],
+                cls.POSTS_LAST_MODIFIED: post[UnitAnalysisPostKey.DT_LAST_MODIFIED],
+                cls.POSTS_PUBLISHED: post[UnitAnalysisPostKey.DT_PUBLISHED],
+                cls.POSTS_VIEW_COUNT: post[UnitAnalysisPostKey.VIEW_COUNT],
             })
 
         return ret
@@ -119,7 +117,7 @@ class AnalysisPostGetSuccessResponseKey(PostGetSuccessResponseKey):
     """
 
     TYPE = "type"
-    OBJECT_NAME = "name"
+    UNIT_NAME = "name"
 
     SUMMARY = "summary"
     SUMMON_RESULT = "summonResult"
@@ -164,10 +162,10 @@ class AnalysisPostGetSuccessResponseKey(PostGetSuccessResponseKey):
 
         for skill in skills:
             ret.append({
-                cls.C_SKILL_NAME: skill[ObjectAnalysisPostKey.C_SKILL_NAME],
-                cls.C_SKILL_INFO: skill[ObjectAnalysisPostKey.C_SKILL_INFO],
-                cls.C_SKILL_ROTATIONS: skill[ObjectAnalysisPostKey.C_SKILL_ROTATIONS],
-                cls.C_SKILL_TIPS: skill[ObjectAnalysisPostKey.C_SKILL_TIPS],
+                cls.C_SKILL_NAME: skill[UnitAnalysisPostKey.C_SKILL_NAME],
+                cls.C_SKILL_INFO: skill[UnitAnalysisPostKey.C_SKILL_INFO],
+                cls.C_SKILL_ROTATIONS: skill[UnitAnalysisPostKey.C_SKILL_ROTATIONS],
+                cls.C_SKILL_TIPS: skill[UnitAnalysisPostKey.C_SKILL_TIPS],
             })
 
         return ret
@@ -183,36 +181,36 @@ class AnalysisPostGetSuccessResponse(PostGetSuccessResponse):
 
         post = get_result.data
 
-        self._type = post[ObjectAnalysisPostKey.TYPE]
-        self._object_name = post[ObjectAnalysisPostKey.OBJECT_NAME]
-        self._summary = post[ObjectAnalysisPostKey.SUMMARY]
-        self._summon_result = post[ObjectAnalysisPostKey.SUMMON_RESULT]
-        self._passives = post[ObjectAnalysisPostKey.PASSIVES]
-        self._normal_attacks = post[ObjectAnalysisPostKey.NORMAL_ATTACKS]
-        self._videos = post[ObjectAnalysisPostKey.VIDEOS]
-        self._story = post[ObjectAnalysisPostKey.STORY]
-        self._keywords = post[ObjectAnalysisPostKey.KEYWORDS]
+        self._type = post[UnitAnalysisPostKey.TYPE]
+        self._unit_name = post[UnitAnalysisPostKey.UNIT_NAME]
+        self._summary = post[UnitAnalysisPostKey.SUMMARY]
+        self._summon_result = post[UnitAnalysisPostKey.SUMMON_RESULT]
+        self._passives = post[UnitAnalysisPostKey.PASSIVES]
+        self._normal_attacks = post[UnitAnalysisPostKey.NORMAL_ATTACKS]
+        self._videos = post[UnitAnalysisPostKey.VIDEOS]
+        self._story = post[UnitAnalysisPostKey.STORY]
+        self._keywords = post[UnitAnalysisPostKey.KEYWORDS]
 
         self._type_specific_serialized = {}
-        if self._type == ObjectAnalysisPostType.CHARACTER:
+        if self._type == UnitAnalysisPostType.CHARACTER:
             self._type_specific_serialized = {
-                AnalysisPostGetSuccessResponseKey.C_FORCE_STRIKES: post[ObjectAnalysisPostKey.C_FORCE_STRIKES],
+                AnalysisPostGetSuccessResponseKey.C_FORCE_STRIKES: post[UnitAnalysisPostKey.C_FORCE_STRIKES],
                 AnalysisPostGetSuccessResponseKey.C_SKILLS:
-                    AnalysisPostGetSuccessResponseKey.convert_skill_key(post[ObjectAnalysisPostKey.C_SKILLS]),
-                AnalysisPostGetSuccessResponseKey.C_TIPS_N_BUILDS: post[ObjectAnalysisPostKey.C_TIPS_N_BUILDS],
+                    AnalysisPostGetSuccessResponseKey.convert_skill_key(post[UnitAnalysisPostKey.C_SKILLS]),
+                AnalysisPostGetSuccessResponseKey.C_TIPS_N_BUILDS: post[UnitAnalysisPostKey.C_TIPS_N_BUILDS],
             }
-        elif self._type == ObjectAnalysisPostType.DRAGON:
+        elif self._type == UnitAnalysisPostType.DRAGON:
             self._type_specific_serialized = {
-                AnalysisPostGetSuccessResponseKey.D_ULTIMATE: post[ObjectAnalysisPostKey.D_ULTIMATE],
-                AnalysisPostGetSuccessResponseKey.D_NOTES: post[ObjectAnalysisPostKey.D_NOTES],
+                AnalysisPostGetSuccessResponseKey.D_ULTIMATE: post[UnitAnalysisPostKey.D_ULTIMATE],
+                AnalysisPostGetSuccessResponseKey.D_NOTES: post[UnitAnalysisPostKey.D_NOTES],
                 AnalysisPostGetSuccessResponseKey.D_SUITABLE_CHARACTERS: post[
-                    ObjectAnalysisPostKey.D_SUITABLE_CHARACTERS],
+                    UnitAnalysisPostKey.D_SUITABLE_CHARACTERS],
             }
 
     def serialize(self):
         return super().serialize() | {
             AnalysisPostGetSuccessResponseKey.TYPE: self._type,
-            AnalysisPostGetSuccessResponseKey.OBJECT_NAME: self._object_name,
+            AnalysisPostGetSuccessResponseKey.UNIT_NAME: self._unit_name,
             AnalysisPostGetSuccessResponseKey.SUMMARY: self._summary,
             AnalysisPostGetSuccessResponseKey.SUMMON_RESULT: self._summon_result,
             AnalysisPostGetSuccessResponseKey.PASSIVES: self._passives,

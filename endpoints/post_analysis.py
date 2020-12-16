@@ -1,22 +1,19 @@
-"""Endpoints to get the data related to object analysis posts."""
+"""Endpoints to get the data related to unit analysis posts."""
 from abc import ABC
 
 from webargs import fields
 from webargs.flaskparser import use_args
 
-from controllers import GoogleUserDataController, ObjectAnalysisPostController, ObjectAnalysisPostKey
+from controllers import GoogleUserDataController, UnitAnalysisPostController, UnitAnalysisPostKey
 from controllers.results import UpdateResult
 from responses import (
-    ResponseCodeCollection,
-    AnalysisPostListResponse,
-    CharaAnalysisPublishSuccessResponse, CharaAnalysisPublishFailedResponse,
-    DragonAnalysisPublishSuccessResponse, DragonAnalysisPublishFailedResponse,
-    AnalysisPostGetSuccessResponse, AnalysisPostGetFailedResponse,
-    AnalysisPostEditSuccessResponse, AnalysisPostEditFailedResponse,
-    AnalysisPostIDCheckResponse
+    AnalysisPostEditFailedResponse, AnalysisPostEditSuccessResponse, AnalysisPostGetFailedResponse,
+    AnalysisPostGetSuccessResponse, AnalysisPostIDCheckResponse, AnalysisPostListResponse,
+    CharaAnalysisPublishFailedResponse, CharaAnalysisPublishSuccessResponse, DragonAnalysisPublishFailedResponse,
+    DragonAnalysisPublishSuccessResponse, ResponseCodeCollection,
 )
 from .base import EndpointBase
-from .post_base import EPPostListParamBase, EPSinglePostParamBase, EPPostModifyParamBase
+from .post_base import EPPostListParamBase, EPPostModifyParamBase, EPSinglePostParamBase
 
 __all__ = ("EPCharacterAnalysisPostPublish", "EPDragonAnalysisPostPublish",
            "EPAnalysisPostList", "EPAnalysisPostListParam",
@@ -30,7 +27,7 @@ __all__ = ("EPCharacterAnalysisPostPublish", "EPDragonAnalysisPostPublish",
 class EPAnalysisPostPublishParam(EPSinglePostParamBase, ABC):
     """Base parameters for the request of publishing a analysis post."""
 
-    OBJECT_NAME = "name"
+    UNIT_NAME = "name"
 
     SUMMARY = "summary"
     SUMMON_RESULT = "summon"
@@ -46,7 +43,7 @@ class EPAnalysisPostPublishParam(EPSinglePostParamBase, ABC):
 
 
 analysis_pub_args = EPSinglePostParamBase.base_args() | {
-    EPAnalysisPostPublishParam.OBJECT_NAME: fields.Str(),
+    EPAnalysisPostPublishParam.UNIT_NAME: fields.Str(),
     EPAnalysisPostPublishParam.SUMMARY: fields.Str(),
     EPAnalysisPostPublishParam.SUMMON_RESULT: fields.Str(),
     EPAnalysisPostPublishParam.PASSIVES: fields.Str(),
@@ -89,10 +86,10 @@ class EPCharaAnalysisPostPublishParam(EPAnalysisPostPublishParam):
 
         for skill in skills:
             ret.append({
-                ObjectAnalysisPostKey.C_SKILL_NAME: skill[cls.SKILL_NAME],
-                ObjectAnalysisPostKey.C_SKILL_INFO: skill[cls.SKILL_INFO],
-                ObjectAnalysisPostKey.C_SKILL_TIPS: skill[cls.SKILL_TIPS],
-                ObjectAnalysisPostKey.C_SKILL_ROTATIONS: skill[cls.SKILL_ROTATIONS],
+                UnitAnalysisPostKey.C_SKILL_NAME: skill[cls.SKILL_NAME],
+                UnitAnalysisPostKey.C_SKILL_INFO: skill[cls.SKILL_INFO],
+                UnitAnalysisPostKey.C_SKILL_TIPS: skill[cls.SKILL_TIPS],
+                UnitAnalysisPostKey.C_SKILL_ROTATIONS: skill[cls.SKILL_ROTATIONS],
             })
 
         return ret
@@ -115,7 +112,7 @@ class EPCharacterAnalysisPostPublish(EndpointBase):
             return CharaAnalysisPublishFailedResponse(ResponseCodeCollection.FAILED_QUEST_NOT_PUBLISHED_NOT_ADMIN), 401
 
         seq_id = args[EPCharaAnalysisPostPublishParam.SEQ_ID]
-        object_name = args[EPCharaAnalysisPostPublishParam.OBJECT_NAME]
+        unit_name = args[EPCharaAnalysisPostPublishParam.UNIT_NAME]
         lang_code = args[EPCharaAnalysisPostPublishParam.LANG_CODE]
         summary = args[EPCharaAnalysisPostPublishParam.SUMMARY]
         summon_result = args[EPCharaAnalysisPostPublishParam.SUMMON_RESULT]
@@ -128,8 +125,8 @@ class EPCharacterAnalysisPostPublish(EndpointBase):
         story = args[EPCharaAnalysisPostPublishParam.STORY]
         keywords = args[EPCharaAnalysisPostPublishParam.KEYWORDS]
 
-        new_seq_id = ObjectAnalysisPostController.publish_chara_post(
-            object_name, lang_code, summary, summon_result, passives, normal_attacks, special_fs, skills,
+        new_seq_id = UnitAnalysisPostController.publish_chara_post(
+            unit_name, lang_code, summary, summon_result, passives, normal_attacks, special_fs, skills,
             tips_n_builds, videos, story, keywords, seq_id=seq_id
         )
 
@@ -167,7 +164,7 @@ class EPDragonAnalysisPostPublish(EndpointBase):
                 ResponseCodeCollection.FAILED_QUEST_NOT_PUBLISHED_NOT_ADMIN), 401
 
         seq_id = args[EPDragonAnalysisPostPublishParam.SEQ_ID]
-        object_name = args[EPDragonAnalysisPostPublishParam.OBJECT_NAME]
+        unit_name = args[EPDragonAnalysisPostPublishParam.UNIT_NAME]
         lang_code = args[EPDragonAnalysisPostPublishParam.LANG_CODE]
         summary = args[EPDragonAnalysisPostPublishParam.SUMMARY]
         summon_result = args[EPDragonAnalysisPostPublishParam.SUMMON_RESULT]
@@ -180,8 +177,8 @@ class EPDragonAnalysisPostPublish(EndpointBase):
         story = args[EPDragonAnalysisPostPublishParam.STORY]
         keywords = args[EPDragonAnalysisPostPublishParam.KEYWORDS]
 
-        new_seq_id = ObjectAnalysisPostController.publish_dragon_post(
-            object_name, lang_code, summary, summon_result, passives, normal_attacks, ultimate, notes,
+        new_seq_id = UnitAnalysisPostController.publish_dragon_post(
+            unit_name, lang_code, summary, summon_result, passives, normal_attacks, ultimate, notes,
             suitable_characters, videos, story, keywords, seq_id=seq_id
         )
 
@@ -209,7 +206,7 @@ class EPAnalysisPostList(EndpointBase):
 
         is_user_admin = GoogleUserDataController.is_user_admin(args[EPAnalysisPostListParam.GOOGLE_UID])
         lang_code = args[EPAnalysisPostListParam.LANG_CODE]
-        posts, post_count = ObjectAnalysisPostController.get_posts(
+        posts, post_count = UnitAnalysisPostController.get_posts(
             lang_code, start=start_idx, limit=args[EPAnalysisPostListParam.LIMIT]
         )
 
@@ -242,7 +239,7 @@ class EPAnalysisPostGet(EndpointBase):
         seq_id = args[EPAnalysisPostGetParam.SEQ_ID]
         lang_code = args[EPAnalysisPostGetParam.LANG_CODE]
         increase_count = args[EPAnalysisPostGetParam.INCREASE_COUNT]
-        result = ObjectAnalysisPostController.get_post(seq_id, lang_code, increase_count)
+        result = UnitAnalysisPostController.get_post(seq_id, lang_code, increase_count)
 
         if not result.data:
             return AnalysisPostGetFailedResponse(ResponseCodeCollection.FAILED_POST_NOT_EXISTS), 404
@@ -272,7 +269,7 @@ class EPCharaAnalysisPostEdit(EndpointBase):
             return CharaAnalysisPublishFailedResponse(ResponseCodeCollection.FAILED_QUEST_NOT_PUBLISHED_NOT_ADMIN), 401
 
         seq_id = args[EPCharaAnalysisPostEditParam.SEQ_ID]
-        object_name = args[EPCharaAnalysisPostEditParam.OBJECT_NAME]
+        unit_name = args[EPCharaAnalysisPostEditParam.UNIT_NAME]
         lang_code = args[EPCharaAnalysisPostEditParam.LANG_CODE]
         summary = args[EPCharaAnalysisPostEditParam.SUMMARY]
         summon_result = args[EPCharaAnalysisPostEditParam.SUMMON_RESULT]
@@ -286,8 +283,8 @@ class EPCharaAnalysisPostEdit(EndpointBase):
         keywords = args[EPCharaAnalysisPostEditParam.KEYWORDS]
         modify_note = args[EPCharaAnalysisPostEditParam.MODIFY_NOTE]
 
-        edit_outcome = ObjectAnalysisPostController.edit_chara_post(
-            seq_id, object_name, lang_code, summary, summon_result, passives, normal_attacks, special_fs, skills,
+        edit_outcome = UnitAnalysisPostController.edit_chara_post(
+            seq_id, unit_name, lang_code, summary, summon_result, passives, normal_attacks, special_fs, skills,
             tips_n_builds, videos, story, keywords, modify_note
         )
 
@@ -323,7 +320,7 @@ class EPDragonAnalysisPostEdit(EndpointBase):
                 ResponseCodeCollection.FAILED_QUEST_NOT_PUBLISHED_NOT_ADMIN), 401
 
         seq_id = args[EPDragonAnalysisPostEditParam.SEQ_ID]
-        object_name = args[EPDragonAnalysisPostEditParam.OBJECT_NAME]
+        unit_name = args[EPDragonAnalysisPostEditParam.UNIT_NAME]
         lang_code = args[EPDragonAnalysisPostEditParam.LANG_CODE]
         summary = args[EPDragonAnalysisPostEditParam.SUMMARY]
         summon_result = args[EPDragonAnalysisPostEditParam.SUMMON_RESULT]
@@ -337,8 +334,8 @@ class EPDragonAnalysisPostEdit(EndpointBase):
         keywords = args[EPDragonAnalysisPostEditParam.KEYWORDS]
         modify_note = args[EPDragonAnalysisPostEditParam.MODIFY_NOTE]
 
-        edit_outcome = ObjectAnalysisPostController.edit_dragon_post(
-            seq_id, object_name, lang_code, summary, summon_result, passives, normal_attacks, ultimate, notes,
+        edit_outcome = UnitAnalysisPostController.edit_dragon_post(
+            seq_id, unit_name, lang_code, summary, summon_result, passives, normal_attacks, ultimate, notes,
             suitable_characters, videos, story, keywords, modify_note
         )
 
@@ -374,7 +371,7 @@ class EPAnalysisPostIDCheck(EndpointBase):
 
         seq_id = args[EPAnalysisPostIDCheckParam.SEQ_ID]
         lang_code = args[EPAnalysisPostIDCheckParam.LANG_CODE]
-        available = ObjectAnalysisPostController.is_id_lang_available(seq_id, lang_code)
+        available = UnitAnalysisPostController.is_id_lang_available(seq_id, lang_code)
 
         return AnalysisPostIDCheckResponse(is_user_admin, available), 200
 

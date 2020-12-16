@@ -1,7 +1,6 @@
 """Data controllers."""
-from .base import MultilingualGetOneResult, ModifiableDataKey, MultilingualPostKey
+from .base import ModifiableDataKey, MultilingualGetOneResult, MultilingualPostKey
 from .post import (
-    QuestPostController, QuestPostKey,
-    ObjectAnalysisPostKey, ObjectAnalysisPostController, ObjectAnalysisPostType
+    QuestPostController, QuestPostKey, UnitAnalysisPostController, UnitAnalysisPostKey, UnitAnalysisPostType,
 )
 from .user import GoogleLoginType, GoogleUserDataController, GoogleUserDataKeys
