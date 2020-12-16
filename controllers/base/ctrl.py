@@ -19,7 +19,7 @@ class BaseCollection(CollectionPropertiesMixin, Collection, ABC):
 
         super().__init__(self._db, self.get_col_name())
 
-        self.build_indexes()
+        # self.build_indexes()
 
         self._seq = None
         if sequential:

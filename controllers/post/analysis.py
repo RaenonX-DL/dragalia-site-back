@@ -3,9 +3,7 @@ from datetime import datetime
 from enum import IntEnum
 from typing import Any, Optional
 
-import pymongo
-
-from controllers.base import MultilingualPostController, MultilingualPostKey, ModifiableDataKey
+from controllers.base import ModifiableDataKey, MultilingualPostController, MultilingualPostKey
 from controllers.results import UpdateResult
 
 __all__ = ("ObjectAnalysisPostType", "ObjectAnalysisPostKey", "ObjectAnalysisPostController")
@@ -80,7 +78,8 @@ class _ObjectAnalysisPostController(MultilingualPostController):
         super().__init__(ObjectAnalysisPostKey)
 
     def get_posts(
-            self, lang_code: str, /, start: int = 0, limit: int = 0) -> tuple[list[dict[str, Any]], int]:
+            self, lang_code: str, /, start: int = 0, limit: int = 0
+    ) -> tuple[list[dict[str, Any]], int]:
         """
         Get the posts sorted by the last modified date DESC and the total post count.
 
@@ -102,18 +101,7 @@ class _ObjectAnalysisPostController(MultilingualPostController):
             ObjectAnalysisPostKey.VIEW_COUNT: 1
         }
 
-        return (
-            sorted(
-                self.find({ObjectAnalysisPostKey.LANG_CODE: lang_code},
-                          projection=projection,
-                          sort=[(ObjectAnalysisPostKey.DT_LAST_MODIFIED, pymongo.ASCENDING)])
-                    .skip(start)
-                    .limit(limit),
-                key=lambda item: item[ObjectAnalysisPostKey.DT_LAST_MODIFIED],
-                reverse=True
-            ),
-            self.count_documents({ObjectAnalysisPostKey.LANG_CODE: lang_code})
-        )
+        return self._get_post_list(lang_code, projection, start=start, limit=limit)
 
     def publish_chara_post(
             self, object_name: str, lang_code: str, summary: str, summon_result: str, passives: str,

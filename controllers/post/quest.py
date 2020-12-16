@@ -2,9 +2,7 @@
 from datetime import datetime
 from typing import Any, Optional
 
-import pymongo
-
-from controllers.base import MultilingualPostController, MultilingualPostKey, ModifiableDataKey
+from controllers.base import ModifiableDataKey, MultilingualPostController, MultilingualPostKey
 from controllers.results import UpdateResult
 
 __all__ = ("QuestPostKey", "QuestPostController")
@@ -46,7 +44,8 @@ class _QuestPostController(MultilingualPostController):
         super().__init__(QuestPostKey)
 
     def get_posts(
-            self, lang_code: str, /, start: int = 0, limit: int = 0) -> tuple[list[dict[str, Any]], int]:
+            self, lang_code: str, /, start: int = 0, limit: int = 0
+    ) -> tuple[list[dict[str, Any]], int]:
         """
         Get the posts sorted by the last modified date DESC and the total post count.
 
@@ -67,18 +66,7 @@ class _QuestPostController(MultilingualPostController):
             QuestPostKey.VIEW_COUNT: 1
         }
 
-        return (
-            sorted(
-                self.find({QuestPostKey.LANG_CODE: lang_code},
-                          projection=projection,
-                          sort=[(QuestPostKey.DT_LAST_MODIFIED, pymongo.ASCENDING)])
-                    .skip(start)
-                    .limit(limit),
-                key=lambda item: item[QuestPostKey.DT_LAST_MODIFIED],
-                reverse=True
-            ),
-            self.count_documents({QuestPostKey.LANG_CODE: lang_code})
-        )
+        return self._get_post_list(lang_code, projection, start=start, limit=limit)
 
     def publish_post(
             self, title: str, lang_code: str, general_info: str, video: str,

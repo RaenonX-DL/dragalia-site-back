@@ -1,7 +1,9 @@
 """Multilingual post controller base and its related data structure."""
 from abc import ABC
 from datetime import datetime
-from typing import Type, Any, Optional
+from typing import Any, Optional, Type
+
+import pymongo
 
 from controllers.results import UpdateResult
 from .ctrl_lang import MultilingualDataController, MultilingualDataKey, MultilingualGetOneResult
@@ -22,6 +24,24 @@ class MultilingualPostController(MultilingualDataController):
         self._view_count_key = key_class.VIEW_COUNT
 
         super().__init__(key_class)
+
+    def _get_post_list(
+            self, lang_code: str, projection: dict[str, int], /,
+            start: int = 0, limit: int = 0
+    ) -> tuple[list[dict[str, Any]], int]:
+        """Get the post list of the controller."""
+        return (
+            sorted(
+                self.find({self._lang_code_key: lang_code},
+                          projection=projection,
+                          sort=[(self._last_mod_key, pymongo.DESCENDING)])
+                    .skip(start)
+                    .limit(limit),
+                key=lambda item: item[self._last_mod_key],
+                reverse=True
+            ),
+            self.count_documents({self._lang_code_key: lang_code})
+        )
 
     def get_post(self, seq_id: int, lang_code: str = "cht", inc_count: bool = True) -> MultilingualGetOneResult:
         """
