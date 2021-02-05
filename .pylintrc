@@ -9,8 +9,10 @@ ignore=venv/,
 # Reason of the good names:
 # - _
 #   often used as dummy variable during unpacking
+# - e, ex
+#   often used as the var name of exception caught by try..except
 
-good-names=_
+good-names=_,e,ex
 
 include-naming-hint=yes
 
@@ -34,3 +36,10 @@ max-returns=7
 [FORMAT]
 
 max-line-length=119
+
+[MESSAGES CONTROL]
+
+# REMOVE: `unsubscriptable-object` generates false positives for python 3.9 and pylint==2.6.
+#   https://github.com/PyCQA/pylint/pull/3890 - Expected to be fixed in the next version
+#   Re-enable it when the issue is fixed.
+disable=unsubscriptable-object

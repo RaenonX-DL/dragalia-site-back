@@ -2,10 +2,9 @@
 from flask_restful import Api
 
 from endpoints import (
-    EPRootTest, EPUserLogin,
-    EPQuestPostList, EPQuestPostGet, EPQuestPostPublish, EPQuestPostEdit, EPQuestPostIDCheck,
-    EPCharacterAnalysisPostPublish, EPDragonAnalysisPostPublish, EPAnalysisPostList, EPAnalysisPostGet,
-    EPCharaAnalysisPostEdit, EPDragonAnalysisPostEdit, EPAnalysisPostIDCheck
+    EPAnalysisPostGet, EPAnalysisPostIDCheck, EPAnalysisPostList, EPCharaAnalysisPostEdit,
+    EPCharacterAnalysisPostPublish, EPDragonAnalysisPostEdit, EPDragonAnalysisPostPublish, EPQuestPostEdit,
+    EPQuestPostGet, EPQuestPostIDCheck, EPQuestPostList, EPQuestPostPublish, EPRootTest, EPUserLogin,
 )
 from responses import Error500Response
 
@@ -13,10 +12,10 @@ __all__ = ("attach_api",)
 
 
 class CustomApi(Api):
-    """Customized api wrapped Flask app to enforce the error returned to be the conventionalized format."""
+    """Customized Flask API wrapper to enforce the error returned to be the conventionalized format."""
 
-    def handle_error(self, e: Exception):
-        """Force the error to be sent in the conventionalized json format."""
+    def handle_error(self, e: Exception):  # pylint: disable=no-self-use
+        """Force the error to send in the conventionalized json format."""
         return Error500Response(f"{e.__class__.__name__}: {e}").serialize(), 500
 
 
