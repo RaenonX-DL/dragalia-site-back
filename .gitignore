@@ -6,3 +6,10 @@ venv/
 
 # Batch files
 *.sh
+
+# Compiled files
+*.pyc
+__pycache__
+
+# Miscellaneous
+.wakatime-project
