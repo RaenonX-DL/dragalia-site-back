@@ -34,7 +34,7 @@ class BaseCollection(CollectionPropertiesMixin, Collection, ABC):
                 return_document=ReturnDocument.AFTER,
             )[SEQ_COUNT]
 
-    def __eq__(self, other):
+    def __eq__(self, other):  # Conflict with LGTM alert: pylint: disable=useless-super-delegation
         return super().__eq__(other)
 
     def get_next_seq_id(self, /, increase: bool = True) -> int:
