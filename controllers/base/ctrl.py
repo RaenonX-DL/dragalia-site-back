@@ -34,6 +34,9 @@ class BaseCollection(CollectionPropertiesMixin, Collection, ABC):
                 return_document=ReturnDocument.AFTER,
             )[SEQ_COUNT]
 
+    def __eq__(self, other):
+        return super().__eq__(other)
+
     def get_next_seq_id(self, /, increase: bool = True) -> int:
         """Get the next sequential number. If ``increase`` is ``1``, increase the sequential ID."""
         if self._seq is None:
