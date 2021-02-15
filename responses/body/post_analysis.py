@@ -93,8 +93,9 @@ class AnalysisPostListResponseKey(PostListResponseKey):
 class AnalysisPostListResponse(PostListResponse):
     """Response body of getting a analysis post list."""
 
-    def __init__(self, is_admin: bool, posts: list[dict[str, Any]], start_idx: int, post_count: int):
-        super().__init__(is_admin, start_idx, post_count)
+    # pylint: disable=too-many-arguments
+    def __init__(self, is_admin: bool, show_ads: bool, posts: list[dict[str, Any]], start_idx: int, post_count: int):
+        super().__init__(is_admin, show_ads, start_idx, post_count)
 
         self._posts = AnalysisPostListResponseKey.convert_posts_key(posts)
 
@@ -176,8 +177,8 @@ class AnalysisPostGetSuccessResponse(PostGetSuccessResponse):
 
     # pylint: disable=too-many-instance-attributes
 
-    def __init__(self, is_admin: bool, get_result: MultilingualGetOneResult):
-        super().__init__(is_admin, get_result)
+    def __init__(self, is_admin: bool, show_ads: bool, get_result: MultilingualGetOneResult):
+        super().__init__(is_admin, show_ads, get_result)
 
         post = get_result.data
 

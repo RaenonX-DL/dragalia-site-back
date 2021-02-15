@@ -2,7 +2,7 @@
 from abc import ABC
 from typing import Any
 
-from controllers import MultilingualGetOneResult, ModifiableDataKey, MultilingualPostKey
+from controllers import ModifiableDataKey, MultilingualGetOneResult, MultilingualPostKey
 from responses.code import ResponseCodeCollection
 from .basic import Response, ResponseKey
 
@@ -69,6 +69,7 @@ class PostListResponseKey(ResponseKey, ABC):
     """
 
     IS_ADMIN = "isAdmin"
+    SHOW_ADS = "showAds"
 
     POSTS = "posts"
     START_IDX = "startIdx"
@@ -78,10 +79,11 @@ class PostListResponseKey(ResponseKey, ABC):
 class PostListResponse(Response, ABC):
     """Response body of getting a post list."""
 
-    def __init__(self, is_admin: bool, start_idx: int, post_count: int):
+    def __init__(self, is_admin: bool, show_ads: bool, start_idx: int, post_count: int):
         super().__init__(ResponseCodeCollection.SUCCESS)
 
         self._is_admin = is_admin
+        self._show_ads = show_ads
         self._start_idx = start_idx
         self._post_count = post_count
 
@@ -89,7 +91,8 @@ class PostListResponse(Response, ABC):
         return super().serialize() | {
             PostListResponseKey.START_IDX: self._start_idx,
             PostListResponseKey.POST_COUNT: self._post_count,
-            PostListResponseKey.IS_ADMIN: self._is_admin
+            PostListResponseKey.IS_ADMIN: self._is_admin,
+            PostListResponseKey.SHOW_ADS: self._show_ads
         }
 
 
@@ -106,6 +109,7 @@ class PostGetSuccessResponseKey(ResponseKey, ABC):
     """
 
     IS_ADMIN = "isAdmin"
+    SHOW_ADS = "showAds"
 
     SEQ_ID = "seqId"
     LANG_CODE = "lang"
@@ -143,12 +147,13 @@ class PostGetSuccessResponse(Response):
 
     # pylint: disable=too-many-instance-attributes
 
-    def __init__(self, is_admin: bool, get_result: MultilingualGetOneResult):
+    def __init__(self, is_admin: bool, show_ads: bool, get_result: MultilingualGetOneResult):
         super().__init__(ResponseCodeCollection.SUCCESS)
 
         post = get_result.data
 
         self._is_admin = is_admin
+        self._show_ads = show_ads
         self._seq_id = post[MultilingualPostKey.SEQ_ID]
         self._lang_code = post[MultilingualPostKey.LANG_CODE]
         self._modified = post[ModifiableDataKey.DT_LAST_MODIFIED]
@@ -162,6 +167,7 @@ class PostGetSuccessResponse(Response):
     def serialize(self):
         return super().serialize() | {
             PostGetSuccessResponseKey.IS_ADMIN: self._is_admin,
+            PostGetSuccessResponseKey.SHOW_ADS: self._show_ads,
             PostGetSuccessResponseKey.SEQ_ID: self._seq_id,
             PostGetSuccessResponseKey.LANG_CODE: self._lang_code,
             PostGetSuccessResponseKey.DT_LAST_MODIFIED: self._modified,

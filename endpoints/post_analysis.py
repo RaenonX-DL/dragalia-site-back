@@ -4,7 +4,7 @@ from abc import ABC
 from webargs import fields
 from webargs.flaskparser import use_args
 
-from controllers import GoogleUserDataController, UnitAnalysisPostController, UnitAnalysisPostKey
+from controllers import GoogleUserDataController, GoogleUserDataKeys, UnitAnalysisPostController, UnitAnalysisPostKey
 from controllers.results import UpdateResult
 from responses import (
     AnalysisPostEditFailedResponse, AnalysisPostEditSuccessResponse, AnalysisPostGetFailedResponse,
@@ -204,13 +204,15 @@ class EPAnalysisPostList(EndpointBase):
     def get(self, args):  # pylint: disable=no-self-use, missing-function-docstring
         start_idx = args[EPAnalysisPostListParam.START]
 
-        is_user_admin = GoogleUserDataController.is_user_admin(args[EPAnalysisPostListParam.GOOGLE_UID])
+        user_data = GoogleUserDataController.get_user_data(args[EPAnalysisPostListParam.GOOGLE_UID])
+        is_user_admin = user_data[GoogleUserDataKeys.IS_SITE_ADMIN] if user_data else False
+        show_ads = not (user_data and GoogleUserDataKeys.SHOW_ADS in user_data)
         lang_code = args[EPAnalysisPostListParam.LANG_CODE]
         posts, post_count = UnitAnalysisPostController.get_posts(
             lang_code, start=start_idx, limit=args[EPAnalysisPostListParam.LIMIT]
         )
 
-        return AnalysisPostListResponse(is_user_admin, posts, start_idx, post_count), 200
+        return AnalysisPostListResponse(is_user_admin, show_ads, posts, start_idx, post_count), 200
 
 
 # endregion
@@ -234,7 +236,9 @@ class EPAnalysisPostGet(EndpointBase):
 
     @use_args(analysis_post_get_args, location="query")
     def get(self, args):  # pylint: disable=no-self-use, missing-function-docstring
-        is_user_admin = GoogleUserDataController.is_user_admin(args[EPAnalysisPostGetParam.GOOGLE_UID])
+        user_data = GoogleUserDataController.get_user_data(args[EPAnalysisPostGetParam.GOOGLE_UID])
+        is_user_admin = user_data[GoogleUserDataKeys.IS_SITE_ADMIN] if user_data else False
+        show_ads = not (user_data and GoogleUserDataKeys.SHOW_ADS in user_data)
 
         seq_id = args[EPAnalysisPostGetParam.SEQ_ID]
         lang_code = args[EPAnalysisPostGetParam.LANG_CODE]
@@ -244,7 +248,7 @@ class EPAnalysisPostGet(EndpointBase):
         if not result.data:
             return AnalysisPostGetFailedResponse(ResponseCodeCollection.FAILED_POST_NOT_EXISTS), 404
 
-        return AnalysisPostGetSuccessResponse(is_user_admin, result), 200
+        return AnalysisPostGetSuccessResponse(is_user_admin, show_ads, result), 200
 
 
 # endregion

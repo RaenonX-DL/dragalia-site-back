@@ -3,11 +3,9 @@ from typing import Any
 
 from controllers import MultilingualGetOneResult, QuestPostKey
 from .post_base import (
-    PostPublishSuccessResponseKey, PostPublishSuccessResponse, PostPublishFailedResponse,
-    PostListResponseKey, PostListResponse,
-    PostGetSuccessResponseKey, PostGetSuccessResponse, PostGetFailedResponse,
-    PostEditSuccessResponseKey, PostEditSuccessResponse, PostEditFailedResponse,
-    PostIDCheckResponse, PostIDCheckResponseKey
+    PostEditFailedResponse, PostEditSuccessResponse, PostEditSuccessResponseKey, PostGetFailedResponse,
+    PostGetSuccessResponse, PostGetSuccessResponseKey, PostIDCheckResponse, PostIDCheckResponseKey, PostListResponse,
+    PostListResponseKey, PostPublishFailedResponse, PostPublishSuccessResponse, PostPublishSuccessResponseKey,
 )
 
 __all__ = ("QuestPostPublishSuccessResponse", "QuestPostPublishFailedResponse", "QuestPostPublishSuccessResponseKey",
@@ -73,8 +71,9 @@ class QuestPostListResponseKey(PostListResponseKey):
 class QuestPostListResponse(PostListResponse):
     """Response body of getting a quest post list."""
 
-    def __init__(self, is_admin: bool, posts: list[dict[str, Any]], start_idx: int, post_count: int):
-        super().__init__(is_admin, start_idx, post_count)
+    # pylint: disable=too-many-arguments
+    def __init__(self, is_admin: bool, show_ads: bool, posts: list[dict[str, Any]], start_idx: int, post_count: int):
+        super().__init__(is_admin, show_ads, start_idx, post_count)
 
         self._posts = QuestPostListResponseKey.convert_posts_key(posts)
 
@@ -130,8 +129,8 @@ class QuestPostGetSuccessResponse(PostGetSuccessResponse):
 
     # pylint: disable=too-many-instance-attributes
 
-    def __init__(self, is_admin: bool, get_result: MultilingualGetOneResult):
-        super().__init__(is_admin, get_result)
+    def __init__(self, is_admin: bool, show_ads: bool, get_result: MultilingualGetOneResult):
+        super().__init__(is_admin, show_ads, get_result)
 
         post = get_result.data
 

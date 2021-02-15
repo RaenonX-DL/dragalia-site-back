@@ -28,6 +28,7 @@ class GoogleUserDataKeys:
     LOGIN_COUNT = "lc"
     LOGIN_RECENT = "lr"
     IS_SITE_ADMIN = "a"
+    SHOW_ADS = "ad"
 
 
 class _GoogleUserDataController(BaseCollection):
@@ -57,7 +58,8 @@ class _GoogleUserDataController(BaseCollection):
                     GoogleUserDataKeys.LOGIN_COUNT: 1
                 },
                 "$setOnInsert": {
-                    GoogleUserDataKeys.IS_SITE_ADMIN: False
+                    GoogleUserDataKeys.IS_SITE_ADMIN: False,
+                    GoogleUserDataKeys.SHOW_ADS: True,
                 }
             },
             upsert=True
@@ -70,6 +72,23 @@ class _GoogleUserDataController(BaseCollection):
             return GoogleLoginType.NEW_REGISTER
 
         return GoogleLoginType.UNKNOWN
+
+    def get_user_data(self, uid: Optional[str]) -> Optional[dict[str, str]]:
+        """
+        Get the user data.
+
+        Returns ``None`` if the user data does not exist or ``uid`` is ``None``.
+
+        :param uid: Google UID to get the user data
+        :return: user data if found, `None` otherwise
+        """
+        if not uid:
+            return None
+
+        # Prevent number being accidentally passed in
+        user_data = self.find_one({GoogleUserDataKeys.GOOGLE_UID: str(uid)})
+
+        return user_data
 
     def is_user_admin(self, uid: Optional[str]) -> bool:
         """
