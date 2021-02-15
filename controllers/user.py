@@ -49,9 +49,10 @@ class _GoogleUserDataController(BaseCollection):
         :return: if the data is updated
         """
         update_result = self.update_one(
-            {GoogleUserDataKeys.GOOGLE_UID: uid, GoogleUserDataKeys.GOOGLE_EMAIL: email},
+            {GoogleUserDataKeys.GOOGLE_UID: uid},
             {
                 "$set": {
+                    GoogleUserDataKeys.GOOGLE_EMAIL: email,
                     GoogleUserDataKeys.LOGIN_RECENT: datetime.utcnow()
                 },
                 "$inc": {
@@ -59,7 +60,6 @@ class _GoogleUserDataController(BaseCollection):
                 },
                 "$setOnInsert": {
                     GoogleUserDataKeys.IS_SITE_ADMIN: False,
-                    GoogleUserDataKeys.SHOW_ADS: True,
                 }
             },
             upsert=True
