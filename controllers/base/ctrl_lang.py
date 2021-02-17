@@ -1,7 +1,7 @@
 """Multilingual data controller base and its related data structure."""
 from abc import ABC
 from dataclasses import dataclass
-from typing import Optional, Any, Type, Union
+from typing import Any, Optional, Type, Union
 
 import pymongo
 
@@ -27,7 +27,7 @@ class MultilingualGetOneResult:
     other_langs: list[str]
 
 
-class MultilingualDataController(BaseCollection, ABC):
+class MultilingualDataController(BaseCollection, ABC):  # lgtm [py/missing-equals]
     """Multilingual data controller."""
 
     def __init__(self, key_class: Type[Union[MultilingualDataKey, ModifiableDataKey]]):
