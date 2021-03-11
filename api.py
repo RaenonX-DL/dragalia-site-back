@@ -4,7 +4,9 @@ from flask_restful import Api
 from endpoints import (
     EPAnalysisPostGet, EPAnalysisPostIDCheck, EPAnalysisPostList, EPCharaAnalysisPostEdit,
     EPCharacterAnalysisPostPublish, EPDragonAnalysisPostEdit, EPDragonAnalysisPostPublish, EPQuestPostEdit,
-    EPQuestPostGet, EPQuestPostIDCheck, EPQuestPostList, EPQuestPostPublish, EPRootTest, EPUserLogin,
+    EPQuestPostGet, EPQuestPostIDCheck, EPQuestPostList, EPQuestPostPublish,
+    EPRootTest,
+    EPUserLogin, EPUserShowAds,
 )
 from responses import Error500Response
 
@@ -34,6 +36,9 @@ def attach_endpoints(api_app):
     api_app.add_resource(
         EPUserLogin, "/user/login",
         endpoint="user.login")
+    api_app.add_resource(
+        EPUserShowAds, "/user/show-ads",
+        endpoint="user.show_ads")
 
     # Quest posts
 

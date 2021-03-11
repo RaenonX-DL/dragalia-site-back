@@ -206,7 +206,7 @@ class EPAnalysisPostList(EndpointBase):
 
         user_data = GoogleUserDataController.get_user_data(args[EPAnalysisPostListParam.GOOGLE_UID])
         is_user_admin = user_data[GoogleUserDataKeys.IS_SITE_ADMIN] if user_data else False
-        show_ads = not (user_data and GoogleUserDataKeys.SHOW_ADS in user_data)
+        show_ads = not (user_data and GoogleUserDataKeys.ADS_DISABLE_EXPIRY in user_data)
         lang_code = args[EPAnalysisPostListParam.LANG_CODE]
         posts, post_count = UnitAnalysisPostController.get_posts(
             lang_code, start=start_idx, limit=args[EPAnalysisPostListParam.LIMIT]
@@ -238,7 +238,7 @@ class EPAnalysisPostGet(EndpointBase):
     def get(self, args):  # pylint: disable=no-self-use, missing-function-docstring
         user_data = GoogleUserDataController.get_user_data(args[EPAnalysisPostGetParam.GOOGLE_UID])
         is_user_admin = user_data[GoogleUserDataKeys.IS_SITE_ADMIN] if user_data else False
-        show_ads = not (user_data and GoogleUserDataKeys.SHOW_ADS in user_data)
+        show_ads = not (user_data and GoogleUserDataKeys.ADS_DISABLE_EXPIRY in user_data)
 
         seq_id = args[EPAnalysisPostGetParam.SEQ_ID]
         lang_code = args[EPAnalysisPostGetParam.LANG_CODE]

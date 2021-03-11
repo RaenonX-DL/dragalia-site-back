@@ -28,7 +28,7 @@ class GoogleUserDataKeys:
     LOGIN_COUNT = "lc"
     LOGIN_RECENT = "lr"
     IS_SITE_ADMIN = "a"
-    SHOW_ADS = "ad"
+    ADS_DISABLE_EXPIRY = "ad"
 
 
 class _GoogleUserDataController(BaseCollection):
@@ -39,6 +39,7 @@ class _GoogleUserDataController(BaseCollection):
 
     def build_indexes(self):
         self.create_index(GoogleUserDataKeys.GOOGLE_UID, unique=True)
+        self.create_index(GoogleUserDataKeys.ADS_DISABLE_EXPIRY, unique=True, expireAfterSeconds=1)
 
     def user_logged_in(self, uid: str, email: str) -> GoogleLoginType:
         """
@@ -106,6 +107,26 @@ class _GoogleUserDataController(BaseCollection):
         user_data = self.find_one({GoogleUserDataKeys.GOOGLE_UID: str(uid)})
 
         return user_data and user_data.get(GoogleUserDataKeys.IS_SITE_ADMIN)
+
+    def is_user_show_ads(self, uid: Optional[str]) -> bool:
+        """
+        Check if the user should have ads shown.
+
+        If ``uid`` is ``None``, returns ``True`` (non-registered users should have ads shown).
+
+        :param uid: Google UID of the user to check
+        :return: if the ads should be shown to the user
+        """
+        if not uid:
+            return True
+
+        # Prevent number being accidentally passed in
+        user_data = self.find_one({GoogleUserDataKeys.GOOGLE_UID: str(uid)})
+
+        print(uid)
+        print(not (user_data and user_data.get(GoogleUserDataKeys.ADS_DISABLE_EXPIRY)))
+
+        return not (user_data and user_data.get(GoogleUserDataKeys.ADS_DISABLE_EXPIRY))
 
 
 GoogleUserDataController = _GoogleUserDataController()

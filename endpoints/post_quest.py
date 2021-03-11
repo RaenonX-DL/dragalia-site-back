@@ -112,7 +112,7 @@ class EPQuestPostList(EndpointBase):
 
         user_data = GoogleUserDataController.get_user_data(args[EPQuestPostListParam.GOOGLE_UID])
         is_user_admin = user_data[GoogleUserDataKeys.IS_SITE_ADMIN] if user_data else False
-        show_ads = not (user_data and GoogleUserDataKeys.SHOW_ADS in user_data)
+        show_ads = not (user_data and GoogleUserDataKeys.ADS_DISABLE_EXPIRY in user_data)
         lang_code = args[EPQuestPostListParam.LANG_CODE]
         posts, post_count = QuestPostController.get_posts(
             lang_code, start=start_idx, limit=args[EPQuestPostListParam.LIMIT]
@@ -144,7 +144,7 @@ class EPQuestPostGet(EndpointBase):
     def get(self, args):  # pylint: disable=no-self-use, missing-function-docstring
         user_data = GoogleUserDataController.get_user_data(args[EPQuestPostGetParam.GOOGLE_UID])
         is_user_admin = user_data[GoogleUserDataKeys.IS_SITE_ADMIN] if user_data else False
-        show_ads = not (user_data and GoogleUserDataKeys.SHOW_ADS in user_data)
+        show_ads = not (user_data and GoogleUserDataKeys.ADS_DISABLE_EXPIRY in user_data)
 
         seq_id = args[EPQuestPostGetParam.SEQ_ID]
         lang_code = args[EPQuestPostGetParam.LANG_CODE]
